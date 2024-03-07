@@ -27,7 +27,7 @@ public class Tool {
         this.toolIdentity = toolIdentity;
         this.diameter = toolIdentity.diameter;
         this.toolCode = toolIdentity.toolCode;
-        this.maxTime = ToolFactory.setMaxToolTime(this.toolCode);
+        this.maxTime = toolIdentity.maxToolTime;
         this.currentTime = 0;
         this.machine = null;
         this.projectList = new ArrayList<>();

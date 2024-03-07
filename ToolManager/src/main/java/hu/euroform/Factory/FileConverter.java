@@ -9,6 +9,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 
+import static hu.euroform.Factory.ToolFactory.processRow;
+
 public class FileConverter {
     
     public static void XLSXToJsonConverter(String excelFilePath, String jsonFilePath) {
@@ -40,40 +42,5 @@ public class FileConverter {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-    
-    // You need to implement a method to process each row based on your data structure
-    private static Map<String, String> processRow(Row row) {
-        Map<String, String> rowData = new HashMap<>();
-        
-        // Iterate over cells in the row
-        Iterator<Cell> cellIterator = row.cellIterator();
-        while (cellIterator.hasNext()) {
-            Cell cell = cellIterator.next();
-            
-            // Check the cell type and retrieve the value accordingly
-            switch (cell.getCellType()) {
-                case STRING:
-                    rowData.put(getHeaderName(cell.getColumnIndex()), cell.getStringCellValue());
-                    break;
-                case NUMERIC:
-                    rowData.put(getHeaderName(cell.getColumnIndex()), String.valueOf(cell.getNumericCellValue()));
-                    break;
-                // Add more cases for other cell types if necessary
-                
-                default:
-                    // Handle other cell types as needed
-                    break;
-            }
-        }
-        
-        return rowData;
-    }
-    
-    // You may need to implement a method to retrieve the header name based on the column index
-    private static String getHeaderName(int columnIndex) {
-        // Customize this method based on your actual column headers
-        // For example, you might have a predefined list of header names
-        return "Column" + (columnIndex + 1);
     }
 }
