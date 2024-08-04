@@ -1,7 +1,7 @@
 package hu.euroform.Enums;
 
 public enum ToolIdentity {
-    
+    //Names as in import file
     //ECUT
     RT8400300(5.7, 8400, 60),
     RT8400391(7.7, 8400, 60),

@@ -2,8 +2,6 @@ package hu.euroform.Models;
 
 import hu.euroform.Enums.ToolIdentity;
 import hu.euroform.Enums.ToolState;
-import hu.euroform.Factory.ToolFactory;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -15,7 +13,6 @@ public class Tool {
     public Integer toolCode;
     public Integer maxTime;
     public Integer currentTime;
-    public Machine machine;
     public List<Project> projectList;
     public ToolState toolState;
     
@@ -29,7 +26,6 @@ public class Tool {
         this.toolCode = toolIdentity.toolCode;
         this.maxTime = toolIdentity.maxToolTime;
         this.currentTime = 0;
-        this.machine = null;
         this.projectList = new ArrayList<>();
         this.toolState = ToolState.FREE;
     }
@@ -53,12 +49,10 @@ public class Tool {
     }
     
     public static void printAllTool() {
-        int n = 0;
+        
         for (Tool oneTool:Tool.toolList) {
             String base = "D" + oneTool.diameter + " P" + oneTool.toolCode + " - "
                     + oneTool.toolState + " - " + oneTool.currentTime + " - ";
-            
-            base += oneTool.machine == null ? "null" : oneTool.machine.machineName;
             
             base += " - Projects: ";
             

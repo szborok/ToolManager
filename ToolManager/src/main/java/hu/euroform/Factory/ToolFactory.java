@@ -3,7 +3,7 @@ package hu.euroform.Factory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.euroform.Enums.ToolIdentity;
-import hu.euroform.Enums.ToolState;
+import hu.euroform.Models.Matrix;
 import hu.euroform.Models.Tool;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -36,7 +36,7 @@ public class ToolFactory {
                     for (ToolIdentity oneToolIdentity : ToolIdentity.values()) {
                         if (oneToolIdentity.fullName.equals(toolName)) {
                             for (int i = 0; i < amount - 1; i++) {
-                                Tool.toolList.add(new Tool(oneToolIdentity));
+                                Matrix.toolList.add(new Tool(oneToolIdentity));
                                 
                                 //print of successful tool adding
                                 //TODO log the successfully added tools each day in a different file.
