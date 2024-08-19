@@ -13,8 +13,6 @@ import java.io.*;
 public class FileConverter {
 
     private static final Logger logger = LogManager.getLogger(FileConverter.class);
-    private static final String COUNTER_FILE = "logs/attempt_counter.txt";
-    private static final String LOG_FILE_PREFIX = "fileconverter_uploadFromJSON";
 
     // Method to convert the XLSX to JSON after removing the first 5 rows
     public static void XLSXToJsonConverter(String inputPathXLSX, String outputPathJSON) {
