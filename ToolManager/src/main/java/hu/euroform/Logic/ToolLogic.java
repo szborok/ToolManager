@@ -14,37 +14,39 @@ public class ToolLogic {
         ToolLogic.workTime = workTime;
     }
 
-    
-    public static void reserveTool(Double diameter, Integer toolCode, Project project, Integer workTime) {
-        ToolIdentity toolIdentity = getToolIdentityFromDiameterAndToolCode(diameter, toolCode);
+
+    @SuppressWarnings("null")
+    public static Tool getTool(Double diameter, Integer toolCode, Project project, Integer workTime) {
+        ToolIdentity toolIdentity = Tool.getToolIdentityFromDiameterAndToolCode(diameter, toolCode);
         Tool theChoosenOne = null;
 
-        theChoosenOne = getUsedTool(toolIdentity, workTime);
-
-        if (theChoosenOne.equals(null)) {
-            theChoosenOne = getNewTool(toolIdentity);
-        }
-
-        addProjectToTool(theChoosenOne, project);
-        //reset the classes work time, to dont make error with the next tool reservation
-        setWorkTime(null);
-    }
-    
-    public static ToolIdentity getToolIdentityFromDiameterAndToolCode(Double diameter, Integer toolCode) {
-        
-        for (ToolIdentity oneToolIdentity : ToolIdentity.values()) {
-            if (oneToolIdentity.diameter.equals(diameter) && oneToolIdentity.toolCode.equals(toolCode)) {
-                return oneToolIdentity;
+        try {
+            // look for a used tool
+            //i know if does not required here, but it seems more readable for me.
+            if (theChoosenOne.equals(null)) {
+                theChoosenOne = findUsedTool(toolIdentity, workTime); 
             }
+            //if no used tool then we go for a new one.
+            if (theChoosenOne.equals(null)) {
+                System.out.println("No used tool in the matrix. Looking for a new tool.");
+                theChoosenOne = findNewTool(toolIdentity);
+            }
+
+            //if no used or new tool, that means we have to make a fake one, to not run on error, and to show we overused that type.
+            if (theChoosenOne.equals(null)) {
+                System.out.println("No used or new tool in matrix. Creating an in dept tool.");
+                theChoosenOne = createInDeptTool(toolIdentity);
+                System.out.println("In dept tool has been created.");
+            }
+            
+        } catch (Exception e) {
+            System.out.println("Something went wrong while looking for a tool.");
         }
-        // if there is no match
-        System.out.println("There is no tool with D " + diameter + " with this toolcode " + toolCode + ".");
-        return null;
+        return theChoosenOne;
     }
+
     
-    
-    
-    public static Tool getNewTool(ToolIdentity toolIdentity) {
+    public static Tool findNewTool(ToolIdentity toolIdentity) {
         Tool returnTool = null;
         
         for (Tool oneTool:Matrix.toolList) {
@@ -55,7 +57,8 @@ public class ToolLogic {
         return returnTool;
     }
 
-    public static Tool getUsedTool(ToolIdentity toolIdentity, Integer workTime) {
+
+    public static Tool findUsedTool(ToolIdentity toolIdentity, Integer workTime) {
         Double toolMaxTimeMultiplier = 1.2;
         Tool returnTool = null;
         
@@ -63,33 +66,32 @@ public class ToolLogic {
             if (oneTool.toolIdentity.equals(toolIdentity) && oneTool.toolState.equals(ToolState.INUSE)) {
                 if (oneTool.currentTime + workTime < oneTool.maxTime * toolMaxTimeMultiplier ) {
                     returnTool = oneTool;
+                    return returnTool;
+                    // if we find used tool return that
                 }
             }
         }
-        return returnTool;
+        //if we dont find used tool return null, so we can move to get a new/free tool
+        return null;
     }
 
-    public static Tool getDeptTool(ToolIdentity toolIdentity) {
-        Tool deptTool = new Tool(toolIdentity.diameter, toolIdentity.toolCode);
-        deptTool.toolState = ToolState.INDEPT;
-        Matrix.toolList.add(deptTool);
 
-        return deptTool;
+    public static Tool createInDeptTool(ToolIdentity toolIdentity) {
+        Tool inDeptTool = new Tool(toolIdentity.diameter, toolIdentity.toolCode);
+        inDeptTool.toolState = ToolState.INDEPT;
+        Matrix.toolList.add(inDeptTool);
+
+        return inDeptTool;
         
     }
 
     
     public static void addProjectToTool(Tool tool, Project project) {
 
-        if (tool.projectList.contains(project)) {
-            // TODO throw error, the tool already contains the project.
-            System.out.println("The tool already contains the project. Tool UUID: " + tool.id);
-        }
-    
-        if (!tool.projectList.contains(project)  && !tool.toolState.equals(ToolState.MAXED)) {
+        if (!Tool.checkIfToolAlreadyContainsTheProject(tool, project))   {
             tool.projectList.add(project);                  //add project to tool
             tool.currentTime += project.runtimeOfTheTool;   //add programme time to tool
-            tool.updateToolState();                         //update tool state
+            tool.updateToolState();                     //update tool state
             
             
             System.out.println("The " + tool.toolIdentity +"'s UUID is " + tool.id + ".");

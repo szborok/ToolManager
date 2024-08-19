@@ -2,92 +2,62 @@ package hu.euroform.Factory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hu.euroform.Constants;
 import hu.euroform.Enums.ToolIdentity;
 import hu.euroform.Models.Matrix;
 import hu.euroform.Models.Tool;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 public class ToolFactory {
-    
-    public static void uploadToolsFromJSON(String jsonFilePath) {
-        
+
+    private static final Logger logger = LogManager.getLogger(ToolFactory.class);
+
+    public static void uploadToolsFromJSON() {
+        logger.info("Starting upload from JSON...");
+
         try {
-            // Create ObjectMapper instance
+            String jsonFilePath = Constants.Paths.OUTPUT_JSON;
             ObjectMapper objectMapper = new ObjectMapper();
-            
-            // Read JSON file into JsonNode (assuming it's an array)
             JsonNode jsonArray = objectMapper.readTree(new File(jsonFilePath));
             
-            // Iterate through each object in the array
             for (JsonNode jsonObject : jsonArray) {
-                // Extract values using field names
-                String toolName = jsonObject.get("E-Cut, MFC, XF,XFeed szerszámok").asText();
+                String toolName = jsonObject.path("ToolName").asText(null);
+                int amount = jsonObject.path("Amount").asInt(0);
                 
-                try {
-                    int amount = jsonObject.get("Column2").asInt();
-                    
-                    for (ToolIdentity oneToolIdentity : ToolIdentity.values()) {
-                        if (oneToolIdentity.fullName.equals(toolName)) {
-                            for (int i = 0; i < amount - 1; i++) {
-                                Matrix.toolList.add(new Tool(oneToolIdentity));
-                                
-                                //print of successful tool adding
-                                //TODO log the successfully added tools each day in a different file.
-                                //System.out.println("FileManager.uploadToolsFromJSON: " + "Tool Name: " + toolName + " successfully added.");
-                            }
-                        }
-                    }
-                    
-                } catch (Exception e) {
-                    //System.out.println(toolName + " does not have 'Column2'.");;
+                if (toolName == null || toolName.isEmpty()) {
+                    logger.warn("ToolName is missing or empty");
+                    continue;
                 }
+                
+                ToolIdentity matchingToolIdentity = null;
+                for (ToolIdentity oneToolIdentity : ToolIdentity.values()) {
+                    if (oneToolIdentity.fullName.equals(toolName)) {
+                        matchingToolIdentity = oneToolIdentity;
+                        break;
+                    }
+                }
+                
+                if (matchingToolIdentity != null) {
+                    for (int i = 0; i < amount; i++) {
+                        Double diameter = matchingToolIdentity.diameter;
+                        Integer toolCode = matchingToolIdentity.toolCode;
+
+                        Matrix.toolList.add(new Tool(diameter, toolCode));
+                        logger.info("Tool Name: " + toolName + " successfully added. Amount: " + (i + 1));
+                    }
+                    logger.info(amount + " DB " + toolName + " has been added to Matrix.");
+                } else {
+                    logger.warn("No matching tool identity found for: " + toolName);
+                }
+                
             }
             
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error reading JSON file: " + e.getMessage(), e);
         }
     }
-    
-    // You may need to implement a method to retrieve the header name based on the column index
-    static String getHeaderName(int columnIndex) {
-        // Customize this method based on your actual column headers
-        // For example, you might have a predefined list of header names
-        return "Column" + (columnIndex + 1);
-    }
-    
-    // You need to implement a method to process each row based on your data structure
-    static Map<String, String> processRow(Row row) {
-        Map<String, String> rowData = new HashMap<>();
-        
-        // Iterate over cells in the row
-        Iterator<Cell> cellIterator = row.cellIterator();
-        while (cellIterator.hasNext()) {
-            Cell cell = cellIterator.next();
-            
-            // Check the cell type and retrieve the value accordingly
-            switch (cell.getCellType()) {
-                case STRING:
-                    rowData.put(getHeaderName(cell.getColumnIndex()), cell.getStringCellValue());
-                    break;
-                case NUMERIC:
-                    rowData.put(getHeaderName(cell.getColumnIndex()), String.valueOf(cell.getNumericCellValue()));
-                    break;
-                // Add more cases for other cell types if necessary
-                
-                default:
-                    // Handle other cell types as needed
-                    break;
-            }
-        }
-        
-        return rowData;
-    }
-    
 }

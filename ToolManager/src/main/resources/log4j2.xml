@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <!-- Rolling File Appender with custom file naming pattern -->
+        <RollingFile name="RollingFileAppender" fileName="${sys:logFilename}"
+                     filePattern="${sys:logFilename}-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"/>
+            <Policies>
+                <!-- Create a new log file every day -->
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!-- Create a new file when it reaches 10MB (optional, you can adjust or remove) -->
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="RollingFileAppender"/>
+        </Root>
+    </Loggers>
+</Configuration>
