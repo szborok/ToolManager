@@ -1,5 +1,5 @@
 package hu.euroform.Enums;
 
 public enum ToolState {
-    FREE,INUSE,MAXED,INDEPT
+    FREE,INUSE,MAXED,INDEBT
 }

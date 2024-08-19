@@ -34,9 +34,9 @@ public class ToolLogic {
 
             //if no used or new tool, that means we have to make a fake one, to not run on error, and to show we overused that type.
             if (theChoosenOne.equals(null)) {
-                System.out.println("No used or new tool in matrix. Creating an in dept tool.");
-                theChoosenOne = createInDeptTool(toolIdentity);
-                System.out.println("In dept tool has been created.");
+                System.out.println("No used or new tool in matrix. Creating an in debt tool.");
+                theChoosenOne = createInDebtTool(toolIdentity);
+                System.out.println("In debt tool has been created.");
             }
             
         } catch (Exception e) {
@@ -76,12 +76,12 @@ public class ToolLogic {
     }
 
 
-    public static Tool createInDeptTool(ToolIdentity toolIdentity) {
-        Tool inDeptTool = new Tool(toolIdentity.diameter, toolIdentity.toolCode);
-        inDeptTool.toolState = ToolState.INDEPT;
-        Matrix.toolList.add(inDeptTool);
+    public static Tool createInDebtTool(ToolIdentity toolIdentity) {
+        Tool inDebtTool = new Tool(toolIdentity.diameter, toolIdentity.toolCode);
+        inDebtTool.toolState = ToolState.INDEBT;
+        Matrix.toolList.add(inDebtTool);
 
-        return inDeptTool;
+        return inDebtTool;
         
     }
 
@@ -91,7 +91,7 @@ public class ToolLogic {
         if (!Tool.checkIfToolAlreadyContainsTheProject(tool, project))   {
             tool.projectList.add(project);                  //add project to tool
             tool.currentTime += project.runtimeOfTheTool;   //add programme time to tool
-            tool.updateToolState();                     //update tool state
+            tool.updateToolState();                         //update tool state
             
             
             System.out.println("The " + tool.toolIdentity +"'s UUID is " + tool.id + ".");

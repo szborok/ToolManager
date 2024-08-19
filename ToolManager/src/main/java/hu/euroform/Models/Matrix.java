@@ -70,14 +70,14 @@ public class Matrix {
         }
         return maxedTools;
     }
-    public static List<Tool> indeptToolsList() {
-        List<Tool> indeptTools = new ArrayList<>();
+    public static List<Tool> indebtToolsList() {
+        List<Tool> indebtTools = new ArrayList<>();
         for (Tool oneTool : toolList) {
-            if (oneTool.toolState.equals(ToolState.INDEPT)) {
-                indeptTools.add(oneTool);
+            if (oneTool.toolState.equals(ToolState.INDEBT)) {
+                indebtTools.add(oneTool);
             }
         }
-        return indeptTools;
+        return indebtTools;
     }
 
 
