@@ -1,7 +1,7 @@
 package hu.euroform.Exception;
 
-public class noToolInMatrix extends Exception { 
-    public noToolInMatrix(String errorMessage) {
+public class NoToolInMatrix extends Exception { 
+    public NoToolInMatrix(String errorMessage) {
         super(errorMessage);
     }
 }

@@ -43,4 +43,42 @@ public class Matrix {
         }
     }
 
+    public static List<Tool> freeToolsList() {
+        List<Tool> freeTools = new ArrayList<>();
+        for (Tool oneTool : toolList) {
+            if (oneTool.toolState.equals(ToolState.FREE)) {
+                freeTools.add(oneTool);
+            }
+        }
+        return freeTools;
+    }
+    public static List<Tool> inuseToolsList() {
+        List<Tool> inuseTools = new ArrayList<>();
+        for (Tool oneTool : toolList) {
+            if (oneTool.toolState.equals(ToolState.INUSE)) {
+                inuseTools.add(oneTool);
+            }
+        }
+        return inuseTools;
+    }
+    public static List<Tool> maxedToolsList() {
+        List<Tool> maxedTools = new ArrayList<>();
+        for (Tool oneTool : toolList) {
+            if (oneTool.toolState.equals(ToolState.MAXED)) {
+                maxedTools.add(oneTool);
+            }
+        }
+        return maxedTools;
+    }
+    public static List<Tool> indeptToolsList() {
+        List<Tool> indeptTools = new ArrayList<>();
+        for (Tool oneTool : toolList) {
+            if (oneTool.toolState.equals(ToolState.INDEPT)) {
+                indeptTools.add(oneTool);
+            }
+        }
+        return indeptTools;
+    }
+
+
 }

@@ -16,7 +16,7 @@ public class ToolLogic {
 
 
     @SuppressWarnings("null")
-    public static Tool getTool(Double diameter, Integer toolCode, Project project, Integer workTime) {
+    public static Tool findTool(Double diameter, Integer toolCode, Project project, Integer workTime) {
         ToolIdentity toolIdentity = Tool.getToolIdentityFromDiameterAndToolCode(diameter, toolCode);
         Tool theChoosenOne = null;
 
