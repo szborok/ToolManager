@@ -24,7 +24,7 @@ public class Main {
         //Upload tools from JSON to the Matrix's tool list.
         ToolFactory.uploadToolsFromJSON();
 
-        Matrix.printAllTool();
+        //Matrix.printAllTool();
 
         //Run simulation
         reserveSimulation.reserveNewToolSimulation();
