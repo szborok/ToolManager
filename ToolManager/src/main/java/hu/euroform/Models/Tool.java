@@ -31,11 +31,16 @@ public class Tool {
 
     // ----------------------------------
 
+    @Override
+    public String toString() {
+        return "Tool ID: " + this.id + " - D" + this.diameter + " " + this.toolCode;
+    }
     
 
     public ToolState getToolState() {
         return this.toolState;
     }
+
 
     public void updateToolState() {
         if (this.currentTime == 0) {
@@ -57,15 +62,6 @@ public class Tool {
         // if there is no match
         System.out.println("There is no tool with D " + diameter + " with this toolcode " + toolCode + ".");
         return null;
-    }
-
-    public static Boolean checkIfToolAlreadyContainsTheProject(Tool oneTool, Project project) {
-        if (oneTool.projectList.contains(project)) {
-            // TODO throw error, the tool already contains the project.
-            System.out.println("The tool already contains the project. Tool UUID: " + oneTool.id);
-            return true;
-        }
-        return false;
     }
 
 
