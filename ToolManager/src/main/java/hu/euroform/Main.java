@@ -7,6 +7,7 @@ import hu.euroform.Logic.ToolLogic;
 import hu.euroform.Model.Matrix;
 import hu.euroform.Simulation.reserveSimulation;
 
+
 public class Main {
     //Database wont be coded till the program fully complete for version one.
     //Custom exception is made/used.
@@ -16,6 +17,7 @@ public class Main {
     //https://github.com/szborok/Hangman.git
 
     public static void main(String[] args) {
+
         FileProcessor oneFileProcessor = new FileProcessor();
         ToolFactory oneToolFactory = new ToolFactory();
         Matrix oneMatrix = new Matrix();
