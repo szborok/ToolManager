@@ -1,10 +1,11 @@
-package hu.euroform.Models;
+package hu.euroform.Model;
 
-import hu.euroform.Enums.ToolIdentity;
-import hu.euroform.Enums.ToolState;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import hu.euroform.Enum.ToolIdentity;
+import hu.euroform.Enum.ToolState;
 
 public class Tool {
     public UUID id;

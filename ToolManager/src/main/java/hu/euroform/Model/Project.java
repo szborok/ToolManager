@@ -1,4 +1,4 @@
-package hu.euroform.Models;
+package hu.euroform.Model;
 
 import java.time.LocalDate;
 

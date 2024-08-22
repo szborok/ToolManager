@@ -1,7 +1,7 @@
 package hu.euroform.Interface;
 
 import hu.euroform.Exception.ToolAlreadyContainsProjectException;
-import hu.euroform.Models.Project;
+import hu.euroform.Model.Project;
 
 public interface IToolLogic {
 

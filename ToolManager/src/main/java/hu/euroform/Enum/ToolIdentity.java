@@ -1,4 +1,4 @@
-package hu.euroform.Enums;
+package hu.euroform.Enum;
 
 public enum ToolIdentity {
     //Names as in import file

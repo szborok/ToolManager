@@ -3,7 +3,7 @@ package hu.euroform;
 import hu.euroform.Factory.FileProcessor;
 import hu.euroform.Factory.LogManagerConfig;
 import hu.euroform.Factory.ToolFactory;
-import hu.euroform.Models.Matrix;
+import hu.euroform.Model.Matrix;
 import hu.euroform.Simulation.reserveSimulation;
 
 public class Main {

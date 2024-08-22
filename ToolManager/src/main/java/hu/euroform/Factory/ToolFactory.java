@@ -3,9 +3,10 @@ package hu.euroform.Factory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.euroform.Constants;
-import hu.euroform.Enums.ToolIdentity;
-import hu.euroform.Models.Matrix;
-import hu.euroform.Models.Tool;
+import hu.euroform.Enum.ToolIdentity;
+import hu.euroform.Model.Matrix;
+import hu.euroform.Model.Tool;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

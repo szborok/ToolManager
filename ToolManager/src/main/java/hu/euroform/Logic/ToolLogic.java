@@ -3,13 +3,13 @@ package hu.euroform.Logic;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import hu.euroform.Enums.ToolIdentity;
-import hu.euroform.Enums.ToolState;
+import hu.euroform.Enum.ToolIdentity;
+import hu.euroform.Enum.ToolState;
 import hu.euroform.Exception.ToolAlreadyContainsProjectException;
 import hu.euroform.Interface.IToolLogic;
-import hu.euroform.Models.Matrix;
-import hu.euroform.Models.Project;
-import hu.euroform.Models.Tool;
+import hu.euroform.Model.Matrix;
+import hu.euroform.Model.Project;
+import hu.euroform.Model.Tool;
 
 import java.util.List;
 

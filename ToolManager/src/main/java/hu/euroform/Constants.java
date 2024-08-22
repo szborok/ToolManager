@@ -1,6 +1,6 @@
 package hu.euroform;
 
-import hu.euroform.Models.Employee;
+import hu.euroform.Model.Employee;
 
 //for future updates, when doing anything in database will require log in from Front End
 

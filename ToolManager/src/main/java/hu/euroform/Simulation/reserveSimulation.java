@@ -2,7 +2,8 @@ package hu.euroform.Simulation;
 
 import hu.euroform.Exception.ToolAlreadyContainsProjectException;
 import hu.euroform.Logic.ToolLogic;
-import hu.euroform.Models.Project;
+import hu.euroform.Model.Project;
+
 import java.time.LocalDate;
 
 public class reserveSimulation {

@@ -1,9 +1,9 @@
-package hu.euroform.Models;
+package hu.euroform.Model;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import hu.euroform.Enums.ToolState;
+import hu.euroform.Enum.ToolState;
 import hu.euroform.Interface.IMatrix;
 
 public class Matrix implements IMatrix{

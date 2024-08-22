@@ -3,7 +3,7 @@ package hu.euroform.Interface;
 
 import java.util.List;
 
-import hu.euroform.Models.Tool;
+import hu.euroform.Model.Tool;
 
 public interface IMatrix {
 
