@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import hu.euroform.Enums.ToolState;
+import hu.euroform.Interface.IMatrix;
 
-public class Matrix {
+public class Matrix implements IMatrix{
 
     public static List<Tool> toolList = new ArrayList<>();
     
@@ -42,8 +43,13 @@ public class Matrix {
             }
         }
     }
+    @Override
+    public List<Tool> getFullToolList() {
+        return toolList;
+    }
 
-    public static List<Tool> freeToolsList() {
+    @Override
+    public List<Tool> getFreeToolsList() {
         List<Tool> freeTools = new ArrayList<>();
         for (Tool oneTool : toolList) {
             if (oneTool.toolState.equals(ToolState.FREE)) {
@@ -52,7 +58,9 @@ public class Matrix {
         }
         return freeTools;
     }
-    public static List<Tool> inuseToolsList() {
+
+    @Override
+    public List<Tool> getInuseToolsList() {
         List<Tool> inuseTools = new ArrayList<>();
         for (Tool oneTool : toolList) {
             if (oneTool.toolState.equals(ToolState.INUSE)) {
@@ -61,7 +69,9 @@ public class Matrix {
         }
         return inuseTools;
     }
-    public static List<Tool> maxedToolsList() {
+
+    @Override
+    public List<Tool> getMaxedToolsList() {
         List<Tool> maxedTools = new ArrayList<>();
         for (Tool oneTool : toolList) {
             if (oneTool.toolState.equals(ToolState.MAXED)) {
@@ -70,7 +80,9 @@ public class Matrix {
         }
         return maxedTools;
     }
-    public static List<Tool> indebtToolsList() {
+
+    @Override
+    public List<Tool> getIndebtToolsList() {
         List<Tool> indebtTools = new ArrayList<>();
         for (Tool oneTool : toolList) {
             if (oneTool.toolState.equals(ToolState.INDEBT)) {

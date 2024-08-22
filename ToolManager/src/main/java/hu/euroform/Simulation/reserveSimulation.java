@@ -7,6 +7,8 @@ import java.time.LocalDate;
 
 public class reserveSimulation {
 
+    static ToolLogic oneToolLogic = new ToolLogic();
+
     static LocalDate today = LocalDate.now();
 
     static Project project30min = new Project(5001, "NS01", 060, 120, 30, today);
@@ -19,7 +21,7 @@ public class reserveSimulation {
 
         //use '.' for double
         try {
-            ToolLogic.reserveATool(5.7,8400, project30min);
+            oneToolLogic.reserveATool(5.7,8400, project30min);
         } catch (ToolAlreadyContainsProjectException e) {
             e.printStackTrace();
         }
@@ -33,8 +35,8 @@ public class reserveSimulation {
         //use '.' for double
         try {
             //on first run it makes a new tool, on the second run it will find the used one and add to that.
-            ToolLogic.reserveATool(7.7,8201, project30min);
-            ToolLogic.reserveATool(7.7, 8201, project10min);
+            oneToolLogic.reserveATool(7.7,8201, project30min);
+            oneToolLogic.reserveATool(7.7, 8201, project10min);
         } catch (ToolAlreadyContainsProjectException e) {
             e.printStackTrace();
         }
@@ -50,7 +52,7 @@ public class reserveSimulation {
         //use '.' for double
         try {
             // max tool time is 60 we add 90 so we can not find any used one even if there is any by accident.
-            ToolLogic.reserveATool(15.6, 8410, project90min);
+            oneToolLogic.reserveATool(15.6, 8410, project90min);
         } catch (ToolAlreadyContainsProjectException e) {
             e.printStackTrace();
         }

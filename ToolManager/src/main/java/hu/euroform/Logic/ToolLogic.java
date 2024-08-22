@@ -6,17 +6,19 @@ import org.apache.logging.log4j.Logger;
 import hu.euroform.Enums.ToolIdentity;
 import hu.euroform.Enums.ToolState;
 import hu.euroform.Exception.ToolAlreadyContainsProjectException;
+import hu.euroform.Interface.IToolLogic;
 import hu.euroform.Models.Matrix;
 import hu.euroform.Models.Project;
 import hu.euroform.Models.Tool;
 
 import java.util.List;
 
-public class ToolLogic {
+public class ToolLogic implements IToolLogic{
 
     private static final Logger logger = LogManager.getLogger(ToolLogic.class);
 
-    public static void reserveATool(Double diameter, Integer toolCode, Project project) throws ToolAlreadyContainsProjectException {
+    @Override
+    public void reserveATool(Double diameter, Integer toolCode, Project project) throws ToolAlreadyContainsProjectException {
         // log and print to terminal are in the called methods.
 
         Tool theChoosenOne = findTool(diameter, toolCode, project);
