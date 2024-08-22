@@ -3,6 +3,7 @@ package hu.euroform;
 import hu.euroform.Factory.FileProcessor;
 import hu.euroform.Factory.LogManagerConfig;
 import hu.euroform.Factory.ToolFactory;
+import hu.euroform.Logic.ToolLogic;
 import hu.euroform.Model.Matrix;
 import hu.euroform.Simulation.reserveSimulation;
 
@@ -15,14 +16,18 @@ public class Main {
     //https://github.com/szborok/Hangman.git
 
     public static void main(String[] args) {
+        FileProcessor oneFileProcessor = new FileProcessor();
+        ToolFactory oneToolFactory = new ToolFactory();
+        Matrix oneMatrix = new Matrix();
+        ToolLogic oneToolLogic = new ToolLogic();
         // Set up file naming before any logging occurs
         LogManagerConfig.setupFileNaming();
 
         //Remove the first 5 row of the excel and turn it to JSON
-        FileProcessor.processFiles();
+        oneFileProcessor.processFiles();
 
         //Upload tools from JSON to the Matrix's tool list.
-        ToolFactory.uploadToolsFromJSON();
+        oneToolFactory.uploadToolsFromJSON();
 
         //Matrix.printAllTool();
 

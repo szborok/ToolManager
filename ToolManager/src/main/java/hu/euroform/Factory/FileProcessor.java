@@ -3,10 +3,12 @@ package hu.euroform.Factory;
 import java.io.File;
 
 import hu.euroform.Constants;
+import hu.euroform.Interface.IFileProcessor;
 
-public class FileProcessor {
+public class FileProcessor implements IFileProcessor{
 
-    public static void processFiles() {
+    @Override
+    public void processFiles() {
         String inputFilePath = Constants.Paths.INPUT_XLSX;
         String outputFilePathXLSX = Constants.Paths.OUTPUT_XLSX;
         String outputFilePathJSON = Constants.Paths.OUTPUT_JSON;

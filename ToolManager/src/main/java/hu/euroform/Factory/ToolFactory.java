@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.euroform.Constants;
 import hu.euroform.Enum.ToolIdentity;
+import hu.euroform.Interface.IToolFactory;
+
 import hu.euroform.Model.Matrix;
 import hu.euroform.Model.Tool;
 
@@ -13,11 +15,12 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 
-public class ToolFactory {
+public class ToolFactory implements IToolFactory{
 
     private static final Logger logger = LogManager.getLogger(ToolFactory.class);
 
-    public static void uploadToolsFromJSON() {
+    @Override
+    public void uploadToolsFromJSON() {
         logger.info("Starting upload from JSON...");
 
         try {
