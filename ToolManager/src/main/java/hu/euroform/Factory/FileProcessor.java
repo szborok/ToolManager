@@ -2,34 +2,41 @@ package hu.euroform.Factory;
 
 import java.io.File;
 
-import hu.euroform.Constants;
 import hu.euroform.Interface.IFileProcessor;
+import hu.euroform.Utilities.Constants;
 
 public class FileProcessor implements IFileProcessor{
 
     @Override
-    public void processFiles() {
-        String inputFilePath = Constants.Paths.INPUT_XLSX;
-        String outputFilePathXLSX = Constants.Paths.OUTPUT_XLSX;
-        String outputFilePathJSON = Constants.Paths.OUTPUT_JSON;
+    public void processMatrixXLSXFile() {
+        //Find the Matrix's XLSX file using the path from Constants.java
+        //Deletes the first five row of the input XLSX, becouse the Matrix not just send raw data, it send other informations before it.
+        //Saves the manipulated XLSX to a different directory
+        //Converts the manipulated XLSX to JSON
+
+        String originalXLSX = Constants.Paths.MATRIX_ORIGINAL_FILE;
+        String fixedXLSX = Constants.Paths.MATRIX_FIXED_FILE;
+        String resultJSON = Constants.Paths.MATRIX_JSON_FILE;
 
         // Check if input file exists
-        File inputFile = new File(inputFilePath);
-        if (!inputFile.exists()) {
-            System.out.println("Input file does not exist: " + inputFilePath);
+        File checkForExistingInputFile = new File(originalXLSX);
+        if (!checkForExistingInputFile.exists()) {
+            //TODO error for missing/ not correct name/ path of the input file
+            System.out.println("Input file does not exist: " + checkForExistingInputFile);
             return;
         }
 
         // Ensure output directories exist
-        File outputXLSXFile = new File(outputFilePathXLSX);
+        //TODO handle error
+        File outputXLSXFile = new File(fixedXLSX);
         outputXLSXFile.getParentFile().mkdirs();
-        File outputJSONFile = new File(outputFilePathJSON);
+        File outputJSONFile = new File(resultJSON);
         outputJSONFile.getParentFile().mkdirs();
 
-        // Remove the first five rows from the Excel file and save it
-        FileConverter.removeFirstFiveRows(inputFilePath, outputFilePathXLSX);
+        // Remove the first five rows from the Excel file and save it.
+        FileConverter.removeFirstFiveRows(originalXLSX, fixedXLSX);
         
         // Convert the modified Excel file to JSON
-        FileConverter.XLSXToJsonConverter(outputFilePathXLSX, outputFilePathJSON);
+        FileConverter.XLSXToJsonConverter(fixedXLSX, resultJSON);
     }
 }

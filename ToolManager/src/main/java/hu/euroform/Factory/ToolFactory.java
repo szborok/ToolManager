@@ -2,12 +2,13 @@ package hu.euroform.Factory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hu.euroform.Constants;
+
 import hu.euroform.Enum.ToolIdentity;
 import hu.euroform.Interface.IToolFactory;
 
 import hu.euroform.Model.Matrix;
 import hu.euroform.Model.Tool;
+import hu.euroform.Utilities.Constants;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,7 +25,7 @@ public class ToolFactory implements IToolFactory{
         logger.info("Starting upload from JSON...");
 
         try {
-            String jsonFilePath = Constants.Paths.OUTPUT_JSON;
+            String jsonFilePath = Constants.Paths.MATRIX_JSON_FILE;
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonArray = objectMapper.readTree(new File(jsonFilePath));
             

@@ -72,9 +72,9 @@ public class FileConverter {
 
     // Method to remove the first 5 rows from an XLSX file
     public static void removeFirstFiveRows(String inputPathXLSX, String outputPathXLSX) {
-        System.out.println("----- START OF REMOVE FIRST FIVE ROWS -----");
+        System.out.println("----- START OF REMOVE FIRST FIVE ROWS OF MATRIX XLSX -----");
         System.out.println("Removing first five rows from: " + inputPathXLSX);
-        logger.info("----- START OF REMOVE FIRST FIVE ROWS -----");
+        logger.info("----- START OF REMOVE FIRST FIVE ROWS OF MATRIX XLSX -----");
         logger.info("Removing first five rows from: " + inputPathXLSX);
 
         try (FileInputStream fis = new FileInputStream(new File(inputPathXLSX));
@@ -126,8 +126,8 @@ public class FileConverter {
             logger.error("Error during row removal: " + e.getMessage(), e);
         }
 
-        System.out.println("----- END OF REMOVE FIRST FIVE ROWS -----");
-        logger.info("----- END OF REMOVE FIRST FIVE ROWS -----");
+        System.out.println("----- END OF REMOVE FIRST FIVE ROWS OF MATRIX XLSX -----");
+        logger.info("----- END OF REMOVE FIRST FIVE ROWS OF MATRIX XLSX -----");
     }
     
     

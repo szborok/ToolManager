@@ -25,7 +25,6 @@ public class ToolLogic implements IToolLogic{
         addProjectToTool(theChoosenOne, project);
     }
 
-    @SuppressWarnings("null")
     //no private or public, becouse it is have to be seen just in this package.
     static Tool findTool(Double diameter, Integer toolCode, Project project) {
         ToolIdentity toolIdentity = Tool.getToolIdentityFromDiameterAndToolCode(diameter, toolCode);

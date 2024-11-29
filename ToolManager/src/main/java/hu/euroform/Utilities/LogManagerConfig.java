@@ -1,4 +1,4 @@
-package hu.euroform.Factory;
+package hu.euroform.Utilities;
 
 import java.io.*;
 
@@ -8,11 +8,11 @@ import java.util.Locale;
 
 public class LogManagerConfig {
 
-    private static final String LOG_FILE_PREFIX = "uploadFromJSON";
-    private static final String LOG_DIRECTORY = "logs";
-
-    private static int getNextFileNumber() {
-        File logDir = new File(LOG_DIRECTORY);
+    private static String LOG_FILE_PREFIX = "log";
+    private static String LOG_DIRECTORY = Constants.Folders.LOG_FOLDER;
+    
+        private static int getNextFileNumber() {
+            File logDir = new File(LOG_DIRECTORY);
         if (!logDir.exists()) {
             logDir.mkdirs();
         }
