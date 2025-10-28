@@ -1,0 +1,22 @@
+{
+  "Euroform_Matrix_2024-11-21.xlsx_23871_1761675177779": {
+    "fileName": "Euroform_Matrix_2024-11-21.xlsx",
+    "filePath": "test_data/filesToProcess/Euroform_Matrix_2024-11-21.xlsx",
+    "fileSize": 23871,
+    "modifiedTime": 1761675177779,
+    "processedAt": "2025-10-28T18:13:29.763Z",
+    "success": true,
+    "toolCount": 432,
+    "outputFile": "/Users/sovi/Library/Mobile Documents/com~apple~CloudDocs/Data/personal_Fun/Coding/Projects/ToolManager/test_data/data/workTracking/Euroform_Matrix_2024-11-21_processed_2025-10-28T18-13-29-761Z.json"
+  },
+  "Euroform_Matrix_2024-11-21.xlsx_23871_1761675226778": {
+    "fileName": "Euroform_Matrix_2024-11-21.xlsx",
+    "filePath": "test_data/filesToProcess/Euroform_Matrix_2024-11-21.xlsx",
+    "fileSize": 23871,
+    "modifiedTime": 1761675226778,
+    "processedAt": "2025-10-28T18:13:47.596Z",
+    "success": true,
+    "toolCount": 432,
+    "outputFile": "/Users/sovi/Library/Mobile Documents/com~apple~CloudDocs/Data/personal_Fun/Coding/Projects/ToolManager/test_data/data/workTracking/Euroform_Matrix_2024-11-21_processed_2025-10-28T18-13-47-593Z.json"
+  }
+}

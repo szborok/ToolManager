@@ -1,0 +1,15 @@
+hu/euroform/Constants.class
+hu/euroform/Main.class
+hu/euroform/Models/Tool.class
+hu/euroform/Models/Matrix.class
+hu/euroform/Factory/FileConverter.class
+hu/euroform/Factory/ToolFactory.class
+hu/euroform/Constants$Employees.class
+hu/euroform/Factory/FileProcessor.class
+hu/euroform/Models/Employee.class
+hu/euroform/Enums/ToolState.class
+hu/euroform/Exception/noToolInMatrix.class
+hu/euroform/Constants$Paths.class
+hu/euroform/Models/Project.class
+hu/euroform/Enums/ToolIdentity.class
+hu/euroform/Logic/ToolLogic.class
