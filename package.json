@@ -1,0 +1,29 @@
+{
+  "name": "tool-manager",
+  "version": "1.0.0",
+  "description": "CNC Tool Management System - JavaScript version",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "node --inspect main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cnc",
+    "tools",
+    "manufacturing",
+    "management"
+  ],
+  "author": "Euroform",
+  "license": "ISC",
+  "dependencies": {
+    "uuid": "^9.0.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
