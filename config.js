@@ -1,250 +1,163 @@
-// config.js
-/**
- * Unified application configuration for ToolManager.
- * Contains all settings, paths, and processing configurations.
- */
-
+﻿// config.js
 const path = require("path");
 
 const config = {
-  // Application settings
   app: {
-    name: "ToolManager",
-    version: "1.0.0",
-    environment: "development", // development, production
-    testMode: true, // true = use test data paths, false = use production paths
-    logLevel: "info", // can be: 'debug', 'info', 'warn', 'error'
+    testMode: true,
+    autoMode: true, // Same as json_scanner's autorun
+    scanIntervalMs: 60000, // 60 seconds - same as json_scanner
+    logLevel: "info",
     enableDetailedLogging: true,
   },
-
-  // Processing modes
   processing: {
-    autoMode: true, // Enable automatic folder watching
-    scheduledMode: false, // Enable scheduled processing
-    emailMode: false, // Enable email processing
-    fileWatcherDelayMs: 2000, // File stabilization delay
-    preventReprocessing: true, // Use registry to prevent duplicate processing
-    moveAfterProcessing: true, // Move processed files to archive
-    generateReports: true, // Generate processing reports
+    preventReprocessing: true,
+    moveAfterProcessing: true,
+    generateReports: true,
   },
-
-  // Paths configuration
+  scheduling: {
+    // Mode for determining job completion dates
+    // Options: "estimated", "json_embedded", "schedule_file"
+    completionDateMode: "estimated",
+    
+    // Days to add to creation date when using "estimated" mode
+    estimatedCompletionDays: 5,
+    
+    // Fallback to estimated mode if other modes fail
+    fallbackToEstimated: true
+  },
+  files: {
+    jsonExtension: ".json",
+    fixedSuffix: "BRK_fixed",
+    resultSuffix: "BRK_result",
+  },
   paths: {
-    // Test mode paths (for development and testing)
     test: {
-      baseDirectory: __dirname,
-      filesToProcess: path.join(__dirname, "test_data", "filesToProcess"),
-      filesProcessed: path.join(
-        __dirname,
-        "test_data",
-        "filesProcessedArchive"
-      ),
-      workTracking: path.join(__dirname, "test_data", "data", "workTracking"),
-      archive: path.join(__dirname, "test_data", "data", "archive"),
-      sampleExcels: path.join(__dirname, "test_data", "sampleExcels"),
-      logs: path.join(__dirname, "logs"),
-      temp: path.join(__dirname, "temp"),
+      // Read-only test case folders (DO NOT MODIFY)
+      testDataPath: path.join(__dirname, "test_data"),
+      
+      // Sample Excel files for development - to identify monitored tools
+      sampleExcelPath: path.join(__dirname, "test_data", "testExcel"),
+      
+      // Working directories for actual processing during testing
+      filesToProcess: path.join(__dirname, "working_data", "filesToProcess"),
+      filesProcessed: path.join(__dirname, "working_data", "filesProcessedArchive"),
+      workTracking: path.join(__dirname, "working_data", "data", "workTracking"),
+      archive: path.join(__dirname, "working_data", "data", "archive"),
+      analysis: path.join(__dirname, "working_data", "analysis"),
+      
+      // JSON files from CNC machines (same as json_scanner - read-only)
+      jsonScanPath: path.join(__dirname, "..", "json_scanner", "test_data", "testPathHumming_auto"),
+      
+      // Excel files directory (scan for any Excel files here in test mode)
+      excelScanPath: path.join(__dirname, "test_data", "testExcel"),
+      
+      // Configuration files (schedule file can be in test_data if needed)
+      scheduleFile: path.join(__dirname, "test_data", "schedules", "production_schedule.json"),
     },
-    // Production mode paths (to be configured for live environment)
     production: {
-      baseDirectory: "C:\\Production\\ToolManager",
+      // Production Excel file processing directory
       filesToProcess: "C:\\Production\\EmailAttachments",
       filesProcessed: "C:\\Production\\ProcessedFiles",
       workTracking: "C:\\Production\\WorkTracking",
       archive: "C:\\Production\\Archive",
-      sampleExcels: "C:\\Production\\ToolReferences",
-      logs: "C:\\Production\\Logs",
-      temp: "C:\\Production\\Temp",
+      analysis: "C:\\Production\\Analysis",
+      
+      // Excel files directory (scan for Excel files in production)
+      excelScanPath: "C:\\Production\\Matrix",
+      
+      // JSON files from CNC machines (production path - root of JSON nest)
+      jsonScanPath: "C:\\Production\\CNC_Data",
+      scheduleFile: "C:\\Production\\Schedules\\production_schedule.json",
     },
-    // Configuration files
-    companyConfig: path.join(__dirname, "companyConfig", "config.properties"),
-    toolDefinitions: path.join(
-      __dirname,
-      "companyConfig",
-      "ToolDefinitions.txt"
-    ),
-    employees: path.join(__dirname, "companyConfig", "Employees.txt"),
-  },
-
-  // Excel processing settings
-  excel: {
-    skipHeaderRows: 1,
-    skipEmptyRows: true,
-    expectedColumns: [
-      "tool_code",
-      "tool_id",
-      "diameter",
-      "description",
-      "quantity",
-      "status",
-      "location",
-    ],
-    requiredColumns: ["tool_code", "diameter"],
-    attachmentPattern: ".*Matrix.*\\.xlsx$",
-  },
-
-  // Tool categories and settings
-  tools: {
-    categories: ["ECUT", "MFC", "XF", "XFEED"],
-    defaultMaxLife: 60,
-    defaultOverrunPercent: 10,
-    identificationConfidenceThreshold: 0.7,
-  },
-
-  // File processing patterns
-  files: {
-    matrixOriginalPattern: "Euroform_Matrix_{date}.xlsx",
-    matrixFixedPattern: "Euroform_Matrix_FIXED_{date}.xlsx",
-    matrixJsonPattern: "Euroform_Matrix_JSON_{date}.json",
-    workTrackingPattern: "{category}_{date}.json",
-    excelExtensions: [".xlsx", ".xls"],
-  },
-
-  // Email processing (for future implementation)
-  email: {
-    enabled: false,
-    server: null, // "imap.company.com"
-    username: null, // "toolmanager@company.com"
-    password: null,
-    checkIntervalMs: 300000, // 5 minutes
-    autoProcess: true,
-    archiveProcessed: true,
-  },
-
-  // Scheduling configuration
-  scheduling: {
-    enabled: false,
-    interval: "daily", // daily, hourly, custom
-    time: "06:00",
-    autoArchive: true,
-    planningDaysAhead: 7,
-    planningWindowStartHour: 6,
-  },
-
-  // Batch processing settings
-  batch: {
-    maxConcurrent: 3,
-    delayBetweenFiles: 1000,
-    parallelEnabled: false,
-  },
-
-  // Performance and monitoring
-  performance: {
-    logMaxFiles: 10,
-    logMaxSize: "10MB",
-    workTrackingEnabled: true,
-    workTrackingAutoArchive: true,
-    workTrackingIncludeMetadata: true,
-    workTrackingPrettyFormat: true,
   },
 };
 
-/**
- * Helper function to get paths based on current mode
- * @param {string} pathKey - Key for the path (e.g., 'filesToProcess')
- * @returns {string} The appropriate path for current mode
- */
-config.getPath = function (pathKey) {
-  const mode = this.app.testMode ? "test" : "production";
-  return this.paths[mode][pathKey] || this.paths.test[pathKey];
+config.getScanPath = function () {
+  // Returns JSON scan path since that's what we actually scan for data
+  return this.getJsonScanPath();
 };
 
-/**
- * Helper function to get all processing paths for current mode
- * @returns {Object} Object containing all paths for current mode
- */
-config.getAllPaths = function () {
-  const mode = this.app.testMode ? "test" : "production";
-  return this.paths[mode];
+config.getExcelScanPath = function () {
+  return this.app.testMode ? this.paths.test.excelScanPath : this.paths.production.excelScanPath;
 };
 
-/**
- * Helper function to check if a file is an Excel file
- * @param {string} filePath - Path to check
- * @returns {boolean} True if file is Excel format
- */
-config.isExcelFile = function (filePath) {
-  const ext = path.extname(filePath).toLowerCase();
-  return this.files.excelExtensions.includes(ext);
+config.getSampleExcelPath = function () {
+  // Only available in test mode - for development reference
+  return this.app.testMode ? this.paths.test.sampleExcelPath : null;
 };
 
-/**
- * Helper function to get configuration for specific processing mode
- * @param {string} mode - Processing mode ('auto', 'manual', 'batch', 'email', 'scheduled')
- * @returns {Object} Configuration for the specified mode
- */
-config.getProcessingConfig = function (mode) {
-  const baseConfig = {
-    moveAfterProcessing: this.processing.moveAfterProcessing,
-    generateReports: this.processing.generateReports,
-    preventReprocessing: this.processing.preventReprocessing,
-  };
-
-  switch (mode) {
-    case "auto":
-      return {
-        ...baseConfig,
-        moveAfterProcessing: true, // Always move in auto mode
-        source: "folder_watch",
-        priority: "auto",
-      };
-    case "manual":
-      return {
-        ...baseConfig,
-        source: "manual",
-        priority: "normal",
-      };
-    case "batch":
-      return {
-        ...baseConfig,
-        source: "batch",
-        maxConcurrent: this.batch.maxConcurrent,
-        delayBetweenFiles: this.batch.delayBetweenFiles,
-      };
-    case "email":
-      return {
-        ...baseConfig,
-        moveAfterProcessing: true, // Always move email attachments
-        source: "email",
-        priority: "high",
-      };
-    case "scheduled":
-      return {
-        ...baseConfig,
-        moveAfterProcessing: true, // Always move in scheduled mode
-        source: "scheduled",
-        priority: "normal",
-      };
-    default:
-      return baseConfig;
-  }
+config.getJsonScanPath = function () {
+  return this.app.testMode ? this.paths.test.jsonScanPath : this.paths.production.jsonScanPath;
 };
 
-/**
- * Initialize configuration and validate required paths
- */
-config.initialize = function () {
-  // Ensure required directories exist in test mode
-  if (this.app.testMode) {
-    const fs = require("fs");
-    const testPaths = this.paths.test;
+config.getScheduleFilePath = function () {
+  return this.app.testMode ? this.paths.test.scheduleFile : this.paths.production.scheduleFile;
+};
 
-    Object.values(testPaths).forEach((dirPath) => {
-      if (typeof dirPath === "string" && dirPath !== __dirname) {
-        try {
-          if (!fs.existsSync(dirPath)) {
-            fs.mkdirSync(dirPath, { recursive: true });
-          }
-        } catch (error) {
-          console.warn(`Could not create directory: ${dirPath}`);
-        }
+config.getCompletionDate = function (creationDate, projectData = null) {
+  const createdDate = new Date(creationDate);
+  
+  switch (this.scheduling.completionDateMode) {
+    case "json_embedded":
+      // Try to extract completion date from JSON data
+      if (projectData && projectData.completionDate) {
+        return new Date(projectData.completionDate);
       }
-    });
+      // Fall through to fallback if enabled
+      if (this.scheduling.fallbackToEstimated) {
+        return this.calculateEstimatedDate(createdDate);
+      }
+      return null;
+      
+    case "schedule_file":
+      // Try to get date from external schedule file
+      const scheduledDate = this.getScheduledDate(projectData);
+      if (scheduledDate) {
+        return scheduledDate;
+      }
+      // Fall through to fallback if enabled
+      if (this.scheduling.fallbackToEstimated) {
+        return this.calculateEstimatedDate(createdDate);
+      }
+      return null;
+      
+    case "estimated":
+    default:
+      return this.calculateEstimatedDate(createdDate);
   }
+};
 
-  console.log(
-    `✓ ToolManager configuration initialized (${this.app.environment} mode)`
-  );
+config.calculateEstimatedDate = function (creationDate) {
+  const estimatedDate = new Date(creationDate);
+  estimatedDate.setDate(estimatedDate.getDate() + this.scheduling.estimatedCompletionDays);
+  return estimatedDate;
+};
+
+config.getScheduledDate = function (projectData) {
+  // TODO: Implement schedule file reading logic
+  // This would read from the schedule file and match project data
+  // For now, return null to fall back to estimated mode
+  return null;
+};
+
+config.initialize = function () {
+  console.log("✓ ToolManager configuration initialized");
+  console.log(`✓ Mode: ${this.app.testMode ? 'TEST' : 'PRODUCTION'} - ${this.app.autoMode ? 'AUTO' : 'MANUAL'}`);
+  console.log(`✓ Scan interval: ${this.app.scanIntervalMs / 1000} seconds`);
+  console.log(`✓ JSON scan path: ${this.getJsonScanPath()}`);
+  console.log(`✓ Excel scan path: ${this.getExcelScanPath()}`);
+  if (this.app.testMode && this.getSampleExcelPath()) {
+    console.log(`✓ Sample Excel path: ${this.getSampleExcelPath()}`);
+  }
+  console.log(`✓ Completion date mode: ${this.scheduling.completionDateMode}`);
+  if (this.scheduling.completionDateMode === "estimated") {
+    console.log(`✓ Estimated completion days: ${this.scheduling.estimatedCompletionDays}`);
+  }
+  
+  // Note about test mode
+  if (this.app.testMode) {
+    console.log("📁 Reading JSON from json_scanner test data, Matrix Excel from test_data/");
+  }
 };
 
 module.exports = config;

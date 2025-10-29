@@ -1,56 +1,112 @@
 // utils/ToolIdentity.js
 /**
  * Tool Identity utilities
- * Provides tool identification based on diameter and tool code
+ * Provides tool identification based on matrix code and tool type classification
  */
 
-const ToolIdentity = {
-  ECUT: "ECUT",
-  MFC: "MFC",
-  XF: "XF",
-  XFEED: "XFEED",
-  UNKNOWN: "UNKNOWN",
+const ToolCategory = {
+  // Matrix Tools (Monitored Inventory)
+  MATRIX_ECUT: "MATRIX_ECUT",
+  MATRIX_MFC: "MATRIX_MFC", 
+  MATRIX_XF: "MATRIX_XF",
+  MATRIX_XFEED: "MATRIX_XFEED",
+  
+  // Non-Matrix Tools (Usage Tracking Only)
+  NON_MATRIX: "NON_MATRIX",
+  
+  // Unknown/Unclassified
+  UNKNOWN: "UNKNOWN"
 };
 
 /**
- * Determine tool identity from diameter and tool code
- * @param {number} diameter - Tool diameter
- * @param {number} toolCode - Tool code
- * @returns {string} Tool identity
+ * Determine tool category from matrix code
+ * @param {string} matrixCode - Tool matrix code (e.g., "RT-8400300")
+ * @returns {object} Tool classification with category and details
  */
-function getToolIdentityFromDiameterAndToolCode(diameter, toolCode) {
-  // Convert to strings for comparison
-  const diameterStr = diameter.toString();
-  const toolCodeStr = toolCode.toString();
-
-  // ECUT tools - typically smaller diameters
-  if (diameter <= 6) {
-    return ToolIdentity.ECUT;
+function getToolIdentityFromMatrixCode(matrixCode) {
+  if (!matrixCode || typeof matrixCode !== 'string') {
+    return {
+      category: ToolCategory.UNKNOWN,
+      isMatrixTool: false,
+      hasInventoryTracking: false
+    };
   }
 
-  // XF tools - finishing tools
-  if (diameter >= 8 && diameter <= 20) {
-    return ToolIdentity.XF;
+  const code = matrixCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+  // Matrix Tools - ECUT (Tool codes: 8400xxx, 8410xxx, 8420xxx)
+  if (code.includes('8400') || code.includes('8410') || code.includes('8420')) {
+    return {
+      category: ToolCategory.MATRIX_ECUT,
+      isMatrixTool: true,
+      hasInventoryTracking: true,
+      toolType: 'End Cutting Tools'
+    };
   }
 
-  // MFC tools - multi-functional cutting
-  if (diameter > 20 && diameter <= 50) {
-    return ToolIdentity.MFC;
+  // Matrix Tools - MFC (Tool codes: 8201xxx)
+  if (code.includes('8201')) {
+    return {
+      category: ToolCategory.MATRIX_MFC,
+      isMatrixTool: true,
+      hasInventoryTracking: true,
+      toolType: 'Multi-Functional Cutting Tools'
+    };
   }
 
-  // XFEED tools - larger drilling/feeding tools
-  if (diameter > 50) {
-    return ToolIdentity.XFEED;
+  // Matrix Tools - XF (Tool codes: 15250xxx)
+  if (code.includes('15250')) {
+    return {
+      category: ToolCategory.MATRIX_XF,
+      isMatrixTool: true,
+      hasInventoryTracking: true,
+      toolType: 'Finishing Tools'
+    };
   }
 
-  // Default for unmatched cases
-  return ToolIdentity.UNKNOWN;
+  // Matrix Tools - XFEED (Tool codes: X7620xxx, X7624xxx)
+  if (code.includes('X7620') || code.includes('X7624')) {
+    return {
+      category: ToolCategory.MATRIX_XFEED,
+      isMatrixTool: true,
+      hasInventoryTracking: true,
+      toolType: 'Feed/Drilling Tools'
+    };
+  }
+
+  // Non-Matrix Tools (everything else)
+  return {
+    category: ToolCategory.NON_MATRIX,
+    isMatrixTool: false,
+    hasInventoryTracking: false,
+    toolType: 'Other Tools'
+  };
 }
 
-// Freeze the object to prevent modifications
-Object.freeze(ToolIdentity);
+/**
+ * Legacy function for backward compatibility
+ * @deprecated Use getToolIdentityFromMatrixCode instead
+ */
+function getToolIdentityFromDiameterAndToolCode(diameter, toolCode) {
+  // Try to construct a matrix code from the tool code
+  const matrixCode = `RT-${toolCode}`;
+  const identity = getToolIdentityFromMatrixCode(matrixCode);
+  
+  // Return legacy format
+  switch (identity.category) {
+    case ToolCategory.MATRIX_ECUT: return "ECUT";
+    case ToolCategory.MATRIX_MFC: return "MFC";
+    case ToolCategory.MATRIX_XF: return "XF";
+    case ToolCategory.MATRIX_XFEED: return "XFEED";
+    default: return "UNKNOWN";
+  }
+}
+
+// Freeze the objects to prevent modifications
+Object.freeze(ToolCategory);
 
 module.exports = {
-  ToolIdentity,
-  getToolIdentityFromDiameterAndToolCode,
+  ToolCategory,
+  getToolIdentityFromMatrixCode,
+  getToolIdentityFromDiameterAndToolCode // Legacy compatibility
 };

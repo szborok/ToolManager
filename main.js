@@ -1,137 +1,175 @@
 // main.js
-/**
- * ToolManager Application - JavaScript Version
- * CNC Tool Management System
- */
-const config = require("./config");
-const Logger = require("./utils/Logger");
-const ExcelProcessor = require("./src/ExcelProcessor");
-const ToolFactory = require("./src/ToolFactory");
-const Matrix = require("./src/Matrix");
-const ToolLogic = require("./src/ToolLogic");
+const Executor = require('./src/Executor');
+const Logger = require('./utils/Logger');
+const config = require('./config');
+
+// Parse command line arguments
+function parseArguments() {
+  const args = process.argv.slice(2);
+  const options = {
+    mode: config.processing.autoMode ? 'auto' : 'manual',
+    projectPath: null,
+    forceReprocess: false,
+    cleanup: false,
+    cleanupStats: false,
+    setup: false
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    switch (args[i]) {
+      case '--mode':
+        options.mode = args[i + 1];
+        i++; // Skip next argument
+        break;
+      case '--manual':
+        options.mode = 'manual';
+        break;
+      case '--auto':
+        options.mode = 'auto';
+        break;
+      case '--cleanup':
+        options.cleanup = true;
+        break;
+      case '--cleanup-stats':
+        options.cleanupStats = true;
+        break;
+      case '--project':
+        options.projectPath = args[i + 1];
+        i++; // Skip next argument
+        break;
+      case '--force':
+        options.forceReprocess = true;
+        break;
+      case '--setup':
+        options.setup = true;
+        break;
+      case '--help':
+        showHelp();
+        process.exit(0);
+        break;
+    }
+  }
+
+  return options;
+}
+
+function showHelp() {
+  console.log(`
+ToolManager Application
+
+Usage: node main.js [options]
+
+Options:
+  --mode <auto|manual> Override config mode setting
+  --manual             Set mode to manual (shortcut for --mode manual)
+  --auto               Set mode to auto (shortcut for --mode auto)
+  --cleanup            Delete all generated files and work tracking items
+  --cleanup-stats      Show statistics about generated files without deleting
+  --project <path>     Process specific Excel file path (manual mode only)
+  --force              Force reprocess even if result files exist
+  --setup              Run setup and configuration verification
+  --help               Show this help message
+
+Test Mode Information:
+  Test mode is currently ${config.app.testMode ? 'ENABLED' : 'DISABLED'} (configured in config.js)
+  
+  AUTO mode paths:
+    - Test mode: ${config.paths.test.filesToProcess}
+    - Production mode: ${config.paths.production.filesToProcess}
+  
+  MANUAL mode paths:
+    - Test mode: Uses ${config.paths.test.filesToProcess}
+    - Production mode: Uses ${config.paths.production.filesToProcess}
+
+Purpose:
+  ToolManager processes Excel matrix files to:
+  - Identify and categorize CNC tools (ECUT, MFC, XF, XFEED)
+  - Generate work tracking JSON files for upcoming tool needs
+  - Compare tool requirements against available inventory
+  - Support manufacturing planning and tool management
+
+Examples:
+  node main.js --manual --project "path/to/matrix.xlsx"
+  node main.js --auto --force
+  node main.js --cleanup (removes all generated files)
+  node main.js --setup (run initial setup)
+  `);
+}
 
 async function main() {
   try {
     console.log("🚀 Starting ToolManager Application...");
 
     // Initialize configuration
-    config.initialize();
+    if (typeof config.initialize === 'function') {
+      config.initialize();
+    }
     console.log("✓ Configuration loaded successfully");
 
     // Set up logging
     Logger.setupFileNaming();
     Logger.info("ToolManager Application started");
 
-    // Create service instances
-    const excelProcessor = ExcelProcessor; // Static class
-    const toolFactory = new ToolFactory();
-    const toolLogic = new ToolLogic();
+    // Parse command line arguments
+    const options = parseArguments();
 
-    Logger.info("✓ Service instances created");
+    // Handle special operations first
+    if (options.setup) {
+      console.log("� Running setup...");
+      const setup = require('./setup');
+      await setup.run();
+      return;
+    }
 
-    // Check if we have a test Excel file to process
-    const testFilePath = config.getPath("filesToProcess");
-    const fs = require("fs");
-
-    if (fs.existsSync(testFilePath)) {
-      const files = fs
-        .readdirSync(testFilePath)
-        .filter((f) => config.isExcelFile(f));
-
-      if (files.length > 0) {
-        const excelFile = require("path").join(testFilePath, files[0]);
-
-        Logger.info(`📊 Processing Excel file: ${excelFile}`);
-        const processingResult = excelProcessor.processMainExcel(excelFile);
-
-        if (!processingResult.success) {
-          throw new Error(`Excel processing failed: ${processingResult.error}`);
-        }
-
-        Logger.info("✓ Excel file processed successfully");
-
-        // For now, just show the results instead of uploading to Matrix
-        console.log(
-          `📊 Found ${
-            Object.keys(processingResult.toolInventory).length
-          } unique tools`
-        );
-        console.log(`📈 Summary:`, processingResult.summary);
+    if (options.cleanup || options.cleanupStats) {
+      console.log(options.cleanup ? "🧹 Cleaning up generated files..." : "📊 Showing cleanup statistics...");
+      const CleanupService = require('./utils/CleanupService');
+      const cleanup = new CleanupService();
+      
+      if (options.cleanupStats) {
+        cleanup.showStats();
       } else {
-        console.log("📝 No Excel files found in test_data/filesToProcess/");
-        console.log("💡 Copy an Excel file there to process it");
+        await cleanup.cleanup();
       }
-    } // Upload tools from JSON to Matrix
-    Logger.info("🔧 Uploading tools from JSON...");
-    const uploadResult = toolFactory.uploadToolsFromJSON();
-
-    if (!uploadResult.success) {
-      throw new Error(`Tool upload failed: ${uploadResult.error}`);
+      return;
     }
 
-    Logger.info(
-      `✓ Tools uploaded: ${uploadResult.toolsCreated} created, ${uploadResult.toolsUpdated} updated`
-    );
-
-    // Print all tools
-    console.log("\n📋 Current Tool Matrix:");
-    Logger.info("Printing all tools in matrix");
-    Matrix.printAllTool();
-
-    // Get and display statistics
-    console.log("\n📊 Tool Statistics:");
-    const summary = Matrix.getSummary();
-    console.log(`Total Tools: ${summary.totalTools}`);
-    console.log(`Free Tools: ${summary.freeTools}`);
-    console.log(`In Use Tools: ${summary.inUseTools}`);
-    console.log(`Maxed Tools: ${summary.maxedTools}`);
-    console.log(`In Debt Tools: ${summary.inDebtTools}`);
-
-    // Get utilization stats
-    const utilizationStats = toolLogic.getToolUtilizationStats();
-    console.log(
-      `\n📈 Average Tool Utilization: ${utilizationStats.averageUtilization.toFixed(
-        2
-      )}%`
-    );
-
-    // Get maintenance recommendations
-    const maintenanceRecommendations =
-      toolLogic.getMaintenanceRecommendations();
-    if (maintenanceRecommendations.length > 0) {
-      console.log("\n🔧 Maintenance Recommendations:");
-      maintenanceRecommendations.slice(0, 5).forEach((rec) => {
-        console.log(
-          `${rec.priority}: ${rec.action} - D${rec.tool.diameter} P${rec.tool.toolCode} (${rec.reason})`
-        );
-      });
+    // Apply command line overrides to config
+    if (options.mode === 'auto') {
+      config.processing.autoMode = true;
+    } else if (options.mode === 'manual') {
+      config.processing.autoMode = false;
     }
 
-    Logger.info("ToolManager application completed successfully");
-    console.log("\n✅ ToolManager Application completed successfully!");
-  } catch (error) {
-    Logger.error(`Application error: ${error.message}`);
-    console.error("❌ Application failed:", error.message);
+    if (options.forceReprocess) {
+      config.processing.preventReprocessing = false;
+    }
+
+    // Create and start executor
+    const executor = new Executor();
+    await executor.start(options);
+
+  } catch (err) {
+    Logger.error(`Application failed: ${err.message}`);
+    console.error(`❌ Application failed: ${err.message}`);
     process.exit(1);
   }
 }
 
-// Handle uncaught exceptions
-process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
-  Logger.error(`Uncaught Exception: ${error.message}`);
-  process.exit(1);
+// Handle graceful shutdown
+process.on('SIGINT', () => {
+  Logger.info("Received SIGINT, shutting down gracefully...");
+  console.log("\n🛑 Shutting down gracefully...");
+  process.exit(0);
 });
 
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
-  Logger.error(`Unhandled Rejection: ${reason}`);
-  process.exit(1);
+process.on('SIGTERM', () => {
+  Logger.info("Received SIGTERM, shutting down gracefully...");
+  console.log("\n🛑 Shutting down gracefully...");
+  process.exit(0);
 });
 
 // Run the application
 if (require.main === module) {
   main();
 }
-
-module.exports = { main };

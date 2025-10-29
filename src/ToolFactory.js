@@ -5,8 +5,7 @@
  */
 const Tool = require("./Tool");
 const Matrix = require("./Matrix");
-const Constants = require("../utils/Constants");
-const FileConverter = require("../utils/FileConverter");
+const { ToolCategory } = require("../utils/ToolIdentity");
 const Logger = require("../utils/Logger");
 
 class ToolFactory {
@@ -17,14 +16,19 @@ class ToolFactory {
     try {
       Logger.info("Starting tool upload from JSON...");
 
-      const jsonPath = Constants.Paths.MATRIX_JSON_FILE;
+      // Use the analysis path for finding the matrix JSON file
+      const fs = require("fs");
+      const path = require("path");
+      const config = require("../config");
+      const analysisPath = config.app.testMode ? config.paths.test.analysis : config.paths.production.analysis;
+      const jsonPath = path.join(analysisPath, "processed_inventory.json");
 
-      if (!FileConverter.fileExists(jsonPath)) {
+      if (!fs.existsSync(jsonPath)) {
         throw new Error(`JSON file not found: ${jsonPath}`);
       }
 
       // Read JSON data
-      const jsonData = FileConverter.readJsonFile(jsonPath);
+      const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
       Logger.info(`Loaded ${jsonData.length} records from JSON file`);
 
       // Process each record and create tools

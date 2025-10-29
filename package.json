@@ -1,28 +1,13 @@
 {
   "name": "tool-manager",
   "version": "1.0.0",
-  "description": "CNC Tool Management System - JavaScript version",
+  "description": "CNC Tool Management System for tracking and managing manufacturing tools",
   "main": "main.js",
   "scripts": {
     "start": "node main.js",
-    "dev": "node --inspect main.js",
     "setup": "node setup.js",
-    "daily": "node processDaily.js process",
-    "daily-watch": "node processDaily.js watch",
-    "daily-stats": "node processDaily.js stats",
-    "analyze": "node dev/analyze.js",
-    "test-excel": "node dev/testExcelProcessor.js",
-    "test": "echo \"Warning: No tests specified yet\" && exit 0",
-    "lint": "echo \"Linting not configured yet\"",
-    "audit-fix": "npm audit fix",
-    "process:watch": "node processingManager.js watch",
-    "process:manual": "node processingManager.js manual",
-    "process:batch": "node processingManager.js batch",
-    "process:schedule": "node processingManager.js schedule",
-    "process:email": "node processingManager.js email",
-    "process:status": "node processingManager.js status",
-    "process:stop": "node processingManager.js stop",
-    "process:help": "node processingManager.js help"
+    "daily": "node processDaily.js",
+    "test": "echo \"Warning: No tests specified yet\" && exit 0"
   },
   "keywords": [
     "cnc",
@@ -35,10 +20,8 @@
   "dependencies": {
     "chokidar": "^3.6.0",
     "uuid": "^9.0.1",
-    "xlsx": "^0.20.4"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
+    "xlsx": "^0.20.4",
+    "chalk": "^4.1.2"
   },
   "engines": {
     "node": ">=14.0.0"
