@@ -1,49 +1,50 @@
 // main.js
-const Executor = require('./src/Executor');
-const Logger = require('./utils/Logger');
-const config = require('./config');
+const Executor = require("./src/Executor");
+const DataManager = require("./src/DataManager");
+const Logger = require("./utils/Logger");
+const config = require("./config");
 
 // Parse command line arguments
 function parseArguments() {
   const args = process.argv.slice(2);
   const options = {
-    mode: config.processing.autoMode ? 'auto' : 'manual',
+    mode: config.processing.autoMode ? "auto" : "manual",
     projectPath: null,
     forceReprocess: false,
     cleanup: false,
     cleanupStats: false,
-    setup: false
+    setup: false,
   };
 
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
-      case '--mode':
+      case "--mode":
         options.mode = args[i + 1];
         i++; // Skip next argument
         break;
-      case '--manual':
-        options.mode = 'manual';
+      case "--manual":
+        options.mode = "manual";
         break;
-      case '--auto':
-        options.mode = 'auto';
+      case "--auto":
+        options.mode = "auto";
         break;
-      case '--cleanup':
+      case "--cleanup":
         options.cleanup = true;
         break;
-      case '--cleanup-stats':
+      case "--cleanup-stats":
         options.cleanupStats = true;
         break;
-      case '--project':
+      case "--project":
         options.projectPath = args[i + 1];
         i++; // Skip next argument
         break;
-      case '--force':
+      case "--force":
         options.forceReprocess = true;
         break;
-      case '--setup':
+      case "--setup":
         options.setup = true;
         break;
-      case '--help':
+      case "--help":
         showHelp();
         process.exit(0);
         break;
@@ -71,7 +72,9 @@ Options:
   --help               Show this help message
 
 Test Mode Information:
-  Test mode is currently ${config.app.testMode ? 'ENABLED' : 'DISABLED'} (configured in config.js)
+  Test mode is currently ${
+    config.app.testMode ? "ENABLED" : "DISABLED"
+  } (configured in config.js)
   
   AUTO mode paths:
     - Test mode: ${config.paths.test.filesToProcess}
@@ -101,7 +104,7 @@ async function main() {
     console.log("🚀 Starting ToolManager Application...");
 
     // Initialize configuration
-    if (typeof config.initialize === 'function') {
+    if (typeof config.initialize === "function") {
       config.initialize();
     }
     console.log("✓ Configuration loaded successfully");
@@ -116,16 +119,20 @@ async function main() {
     // Handle special operations first
     if (options.setup) {
       console.log("� Running setup...");
-      const setup = require('./setup');
+      const setup = require("./setup");
       await setup.run();
       return;
     }
 
     if (options.cleanup || options.cleanupStats) {
-      console.log(options.cleanup ? "🧹 Cleaning up generated files..." : "📊 Showing cleanup statistics...");
-      const CleanupService = require('./utils/CleanupService');
+      console.log(
+        options.cleanup
+          ? "🧹 Cleaning up generated files..."
+          : "📊 Showing cleanup statistics..."
+      );
+      const CleanupService = require("./utils/CleanupService");
       const cleanup = new CleanupService();
-      
+
       if (options.cleanupStats) {
         cleanup.showStats();
       } else {
@@ -135,9 +142,9 @@ async function main() {
     }
 
     // Apply command line overrides to config
-    if (options.mode === 'auto') {
+    if (options.mode === "auto") {
       config.processing.autoMode = true;
-    } else if (options.mode === 'manual') {
+    } else if (options.mode === "manual") {
       config.processing.autoMode = false;
     }
 
@@ -145,10 +152,14 @@ async function main() {
       config.processing.preventReprocessing = false;
     }
 
-    // Create and start executor
-    const executor = new Executor();
-    await executor.start(options);
+    // Create and initialize DataManager
+    console.log("📊 Initializing data storage...");
+    const dataManager = new DataManager();
+    await dataManager.initialize();
 
+    // Create and start executor
+    const executor = new Executor(dataManager);
+    await executor.start(options);
   } catch (err) {
     Logger.error(`Application failed: ${err.message}`);
     console.error(`❌ Application failed: ${err.message}`);
@@ -157,13 +168,13 @@ async function main() {
 }
 
 // Handle graceful shutdown
-process.on('SIGINT', () => {
+process.on("SIGINT", () => {
   Logger.info("Received SIGINT, shutting down gracefully...");
   console.log("\n🛑 Shutting down gracefully...");
   process.exit(0);
 });
 
-process.on('SIGTERM', () => {
+process.on("SIGTERM", () => {
   Logger.info("Received SIGTERM, shutting down gracefully...");
   console.log("\n🛑 Shutting down gracefully...");
   process.exit(0);

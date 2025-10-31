@@ -11,7 +11,9 @@ const Logger = require("../utils/Logger");
 const FileUtils = require("../utils/FileUtils");
 
 class Results {
-  constructor() {}
+  constructor(dataManager = null) {
+    this.dataManager = dataManager;
+  }
 
   /**
    * Generate simplified report with tools used and matrix inventory
@@ -23,15 +25,18 @@ class Results {
 
       // Get list of tools actually used in JSON files
       const toolsUsedList = this.createToolsUsedList(processedJsonData);
-      const usedToolNames = new Set(toolsUsedList.map(tool => tool.toolName));
+      const usedToolNames = new Set(toolsUsedList.map((tool) => tool.toolName));
 
       // Split matrix inventory into used and unused tools
-      const { usedTools, unusedTools } = this.splitMatrixInventory(excelData, usedToolNames);
-      
+      const { usedTools, unusedTools } = this.splitMatrixInventory(
+        excelData,
+        usedToolNames
+      );
+
       // Create set of matrix tool codes for filtering
       const matrixToolCodes = new Set(
-        excelData && excelData.toolInventory 
-          ? excelData.toolInventory.map(tool => tool.toolCode)
+        excelData && excelData.toolInventory
+          ? excelData.toolInventory.map((tool) => tool.toolCode)
           : []
       );
 
@@ -42,29 +47,36 @@ class Results {
           jsonDateRange: this.getJsonDateRange(processedJsonData),
           summary: {
             excelFilesProcessed: excelData ? 1 : 0,
-            jsonFilesProcessed: processedJsonData ? processedJsonData.length : 0,
+            jsonFilesProcessed: processedJsonData
+              ? processedJsonData.length
+              : 0,
             matrixToolsUsed: usedTools.length,
-            nonMatrixToolsUsed: toolsUsedList.length - usedTools.length
-          }
+            nonMatrixToolsUsed: toolsUsedList.length - usedTools.length,
+          },
         },
 
         // Section 1: Matrix Tools (tools found in BOTH Excel inventory AND JSON files)
         matrixTools: this.createMatrixToolsList(toolsUsedList, usedTools),
 
         // Section 2: Non-Matrix Tools (tools found in JSON but NOT in Excel inventory)
-        nonMatrixTools: this.createNonMatrixToolsList(toolsUsedList, matrixToolCodes)
+        nonMatrixTools: this.createNonMatrixToolsList(
+          toolsUsedList,
+          matrixToolCodes
+        ),
       };
 
       // Save simplified report in project root
-      const projectRoot = path.join(__dirname, '..');
+      const projectRoot = path.join(__dirname, "..");
       const reportFileName = `ToolManager_Result.json`;
       const reportFilePath = path.join(projectRoot, reportFileName);
 
       FileUtils.writeJsonFile(reportFilePath, reportData);
       Logger.info(`✅ Simplified report saved: ${reportFileName}`);
 
-      return reportData;
+      // Also save to storage adapter if available
+      await this.saveToStorage(reportData);
 
+      return reportData;
     } catch (err) {
       Logger.error(`Failed to generate simplified report: ${err.message}`);
       throw err;
@@ -80,7 +92,7 @@ class Results {
         firstJsonCompleteDate: null,
         lastJsonCompleteDate: null,
         totalDaysSpan: 0,
-        jsonFilesUsed: []
+        jsonFilesUsed: [],
       };
     }
 
@@ -88,11 +100,11 @@ class Results {
     // Assuming the file names contain date information or we can get it from the data
     const dates = [];
     const fileNames = [];
-    
+
     for (const jsonData of processedJsonData) {
       // Add file name to the list
       fileNames.push(jsonData.fileName);
-      
+
       // Try to extract date from filename (e.g., W5270NS01001A.json)
       // Or use the processedAt timestamp if available
       if (jsonData.processedAt) {
@@ -108,7 +120,7 @@ class Results {
         firstJsonCompleteDate: null,
         lastJsonCompleteDate: null,
         totalDaysSpan: 0,
-        jsonFilesUsed: fileNames
+        jsonFilesUsed: fileNames,
       };
     }
 
@@ -116,7 +128,7 @@ class Results {
     dates.sort((a, b) => a - b);
     const firstDate = dates[0];
     const lastDate = dates[dates.length - 1];
-    
+
     // Calculate span in days
     const diffTime = Math.abs(lastDate - firstDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -125,7 +137,7 @@ class Results {
       firstJsonCompleteDate: firstDate.toISOString(),
       lastJsonCompleteDate: lastDate.toISOString(),
       totalDaysSpan: diffDays,
-      jsonFilesUsed: fileNames.sort() // Sort alphabetically for consistency
+      jsonFilesUsed: fileNames.sort(), // Sort alphabetically for consistency
     };
   }
 
@@ -133,7 +145,11 @@ class Results {
    * Split matrix inventory into used and unused tools based on JSON usage
    */
   splitMatrixInventory(excelData, usedToolNames) {
-    if (!excelData || !excelData.toolInventory || excelData.toolInventory.length === 0) {
+    if (
+      !excelData ||
+      !excelData.toolInventory ||
+      excelData.toolInventory.length === 0
+    ) {
       return { usedTools: [], unusedTools: [] };
     }
 
@@ -143,15 +159,18 @@ class Results {
     for (const tool of excelData.toolInventory) {
       const toolCode = tool.toolCode;
       const quantity = parseFloat(tool.quantity || 0);
-      const toolLifeMinutes = this.getToolLifeMinutes(toolCode, tool.description);
+      const toolLifeMinutes = this.getToolLifeMinutes(
+        toolCode,
+        tool.description
+      );
       const totalCapacity = quantity * toolLifeMinutes;
 
       const toolData = {
         toolCode: toolCode,
-        description: tool.description || '',
+        description: tool.description || "",
         quantity: quantity,
         toolLifePerPiece: toolLifeMinutes,
-        totalCapacityMinutes: Math.round(totalCapacity * 100) / 100
+        totalCapacityMinutes: Math.round(totalCapacity * 100) / 100,
       };
 
       // Check if this tool is used in production (found in JSON files)
@@ -174,7 +193,7 @@ class Results {
    */
   createMatrixToolsList(toolsUsedList, usedMatrixTools) {
     const matrixToolsMap = {};
-    
+
     // Create lookup map of matrix tools by tool code
     for (const matrixTool of usedMatrixTools) {
       matrixToolsMap[matrixTool.toolCode] = matrixTool;
@@ -198,10 +217,17 @@ class Results {
           toolLifePerPiece: matrixTool.toolLifePerPiece,
           totalCapacityMinutes: matrixTool.totalCapacityMinutes,
           // Analysis
-          utilizationPercentage: matrixTool.totalCapacityMinutes > 0 
-            ? Math.round((usedTool.totalUsageTime / matrixTool.totalCapacityMinutes) * 10000) / 100
-            : 0,
-          remainingCapacity: Math.max(0, matrixTool.totalCapacityMinutes - usedTool.totalUsageTime)
+          utilizationPercentage:
+            matrixTool.totalCapacityMinutes > 0
+              ? Math.round(
+                  (usedTool.totalUsageTime / matrixTool.totalCapacityMinutes) *
+                    10000
+                ) / 100
+              : 0,
+          remainingCapacity: Math.max(
+            0,
+            matrixTool.totalCapacityMinutes - usedTool.totalUsageTime
+          ),
         });
       }
     }
@@ -227,7 +253,7 @@ class Results {
           totalUsageTime: usedTool.totalUsageTime,
           usageCount: usedTool.usageCount,
           projectCount: usedTool.projectCount,
-          status: "NOT_IN_MATRIX"
+          status: "NOT_IN_MATRIX",
         });
       }
     }
@@ -252,29 +278,31 @@ class Results {
     for (const projectData of processedJsonData) {
       for (const operation of projectData.toolUsage.operations) {
         const toolName = operation.toolName;
-        if (toolName && toolName !== 'UNKNOWN') {
+        if (toolName && toolName !== "UNKNOWN") {
           if (!toolUsageMap[toolName]) {
             toolUsageMap[toolName] = {
               toolName: toolName,
               totalUsageTime: 0,
               usageCount: 0,
-              projectsUsedIn: new Set()
+              projectsUsedIn: new Set(),
             };
           }
-          
+
           toolUsageMap[toolName].totalUsageTime += operation.operationTime || 0;
           toolUsageMap[toolName].usageCount += 1;
-          toolUsageMap[toolName].projectsUsedIn.add(projectData.toolUsage.project);
+          toolUsageMap[toolName].projectsUsedIn.add(
+            projectData.toolUsage.project
+          );
         }
       }
     }
 
     // Convert to array and format for output
-    const toolsUsedList = Object.values(toolUsageMap).map(tool => ({
+    const toolsUsedList = Object.values(toolUsageMap).map((tool) => ({
       toolName: tool.toolName,
       totalUsageTime: Math.round(tool.totalUsageTime * 100) / 100, // Round to 2 decimal places
       usageCount: tool.usageCount,
-      projectCount: tool.projectsUsedIn.size
+      projectCount: tool.projectsUsedIn.size,
     }));
 
     // Sort by usage time (descending)
@@ -287,21 +315,28 @@ class Results {
    * Create matrix inventory list with capacity calculation (quantity × tool life)
    */
   createMatrixInventoryList(excelData) {
-    if (!excelData || !excelData.toolInventory || excelData.toolInventory.length === 0) {
+    if (
+      !excelData ||
+      !excelData.toolInventory ||
+      excelData.toolInventory.length === 0
+    ) {
       return [];
     }
 
-    const matrixList = excelData.toolInventory.map(tool => {
+    const matrixList = excelData.toolInventory.map((tool) => {
       const quantity = parseFloat(tool.quantity || 0);
-      const toolLifeMinutes = this.getToolLifeMinutes(tool.toolCode || tool.code, tool.description);
+      const toolLifeMinutes = this.getToolLifeMinutes(
+        tool.toolCode || tool.code,
+        tool.description
+      );
       const totalCapacity = quantity * toolLifeMinutes;
 
       return {
-        toolCode: tool.toolCode || tool.code || 'UNKNOWN',
-        description: tool.description || '',
+        toolCode: tool.toolCode || tool.code || "UNKNOWN",
+        description: tool.description || "",
         quantity: quantity,
         toolLifePerPiece: toolLifeMinutes,
-        totalCapacityMinutes: Math.round(totalCapacity * 100) / 100
+        totalCapacityMinutes: Math.round(totalCapacity * 100) / 100,
       };
     });
 
@@ -321,7 +356,7 @@ class Results {
 
     // Extract diameter from tool code or description for better estimation
     const diameter = this.extractDiameterFromTool(toolCode, description);
-    
+
     if (diameter && diameter > 0) {
       // Larger tools generally have longer life
       // This is a simple estimation - adjust based on your actual tool data
@@ -335,21 +370,21 @@ class Results {
     // Tool type specific adjustments
     if (toolCode) {
       const codeUpper = toolCode.toUpperCase();
-      
+
       // Drilling tools typically have longer life
-      if (codeUpper.includes('BHF') || codeUpper.includes('DRILL')) {
+      if (codeUpper.includes("BHF") || codeUpper.includes("DRILL")) {
         baseLife *= 1.5;
       }
       // End mills have standard life
-      else if (codeUpper.includes('VLM') || codeUpper.includes('MILL')) {
+      else if (codeUpper.includes("VLM") || codeUpper.includes("MILL")) {
         baseLife *= 1.0;
       }
       // Tapping tools have shorter life due to higher stress
-      else if (codeUpper.includes('TAP') || codeUpper.includes('MF')) {
+      else if (codeUpper.includes("TAP") || codeUpper.includes("MF")) {
         baseLife *= 0.8;
       }
       // Face mills have longer life
-      else if (codeUpper.includes('KPF') || codeUpper.includes('FACE')) {
+      else if (codeUpper.includes("KPF") || codeUpper.includes("FACE")) {
         baseLife *= 1.3;
       }
     }
@@ -365,7 +400,7 @@ class Results {
     if (description) {
       const match = description.match(/ø?(\d+[,.]?\d*)/);
       if (match) {
-        return parseFloat(match[1].replace(',', '.'));
+        return parseFloat(match[1].replace(",", "."));
       }
     }
 
@@ -374,13 +409,13 @@ class Results {
       // Look for D followed by number (e.g., D10, D8.5)
       const match = toolCode.match(/D(\d+[,.]?\d*)/i);
       if (match) {
-        return parseFloat(match[1].replace(',', '.'));
+        return parseFloat(match[1].replace(",", "."));
       }
-      
+
       // Look for S followed by number (e.g., S8R0, S10.3)
       const sMatch = toolCode.match(/S(\d+[,.]?\d*)/i);
       if (sMatch) {
-        return parseFloat(sMatch[1].replace(',', '.'));
+        return parseFloat(sMatch[1].replace(",", "."));
       }
     }
 
@@ -396,7 +431,7 @@ class Results {
         fileName: null,
         processedAt: null,
         toolCount: 0,
-        tools: []
+        tools: [],
       };
     }
 
@@ -404,7 +439,7 @@ class Results {
       fileName: excelData.fileName,
       processedAt: excelData.processedAt,
       toolCount: excelData.toolInventory ? excelData.toolInventory.length : 0,
-      tools: excelData.toolInventory || []
+      tools: excelData.toolInventory || [],
     };
   }
 
@@ -419,7 +454,7 @@ class Results {
         totalMachiningTime: 0,
         uniqueToolsUsed: 0,
         projectSummaries: [],
-        toolUsageSummary: {}
+        toolUsageSummary: {},
       };
     }
 
@@ -429,7 +464,7 @@ class Results {
       totalMachiningTime: 0,
       uniqueToolsUsed: 0,
       projectSummaries: [],
-      toolUsageSummary: {}
+      toolUsageSummary: {},
     };
 
     const allToolsUsed = new Set();
@@ -443,7 +478,7 @@ class Results {
         operator: projectData.toolUsage.operator,
         operationCount: projectData.toolUsage.operations.length,
         totalTime: projectData.toolUsage.totalTime,
-        toolsUsed: projectData.toolUsage.toolsUsed
+        toolsUsed: projectData.toolUsage.toolsUsed,
       };
 
       summary.projectSummaries.push(projectSummary);
@@ -453,31 +488,37 @@ class Results {
       // Collect all tools used
       for (const toolName of projectData.toolUsage.toolsUsed) {
         allToolsUsed.add(toolName);
-        
+
         if (!summary.toolUsageSummary[toolName]) {
           summary.toolUsageSummary[toolName] = {
             totalUsageTime: 0,
             operationCount: 0,
-            projectsUsedIn: []
+            projectsUsedIn: [],
           };
         }
-        
+
         // Find usage time for this tool in this project
-        const toolOperations = projectData.toolUsage.operations.filter(op => op.toolName === toolName);
-        const toolTime = toolOperations.reduce((sum, op) => sum + op.operationTime, 0);
-        
+        const toolOperations = projectData.toolUsage.operations.filter(
+          (op) => op.toolName === toolName
+        );
+        const toolTime = toolOperations.reduce(
+          (sum, op) => sum + op.operationTime,
+          0
+        );
+
         summary.toolUsageSummary[toolName].totalUsageTime += toolTime;
-        summary.toolUsageSummary[toolName].operationCount += toolOperations.length;
+        summary.toolUsageSummary[toolName].operationCount +=
+          toolOperations.length;
         summary.toolUsageSummary[toolName].projectsUsedIn.push({
           project: projectData.toolUsage.project,
           position: projectData.toolUsage.position,
-          usageTime: toolTime
+          usageTime: toolTime,
         });
       }
     }
 
     summary.uniqueToolsUsed = allToolsUsed.size;
-    
+
     return summary;
   }
 
@@ -488,16 +529,18 @@ class Results {
     const analysis = {
       inventoryVsUsage: {},
       recommendations: [],
-      alerts: []
+      alerts: [],
     };
 
     // This is where you would compare Excel tool inventory with JSON usage patterns
     // For now, provide a basic structure
-    
+
     if (excelData && excelData.toolInventory && processedJsonData) {
-      const inventoryTools = excelData.toolInventory.map(tool => tool.toolCode || tool.code);
+      const inventoryTools = excelData.toolInventory.map(
+        (tool) => tool.toolCode || tool.code
+      );
       const usedTools = new Set();
-      
+
       for (const projectData of processedJsonData) {
         for (const toolName of projectData.toolUsage.toolsUsed) {
           usedTools.add(toolName);
@@ -507,18 +550,24 @@ class Results {
       analysis.inventoryVsUsage = {
         toolsInInventory: inventoryTools.length,
         toolsActuallyUsed: usedTools.size,
-        commonTools: inventoryTools.filter(tool => usedTools.has(tool)),
-        unusedInventory: inventoryTools.filter(tool => !usedTools.has(tool)),
-        missingFromInventory: Array.from(usedTools).filter(tool => !inventoryTools.includes(tool))
+        commonTools: inventoryTools.filter((tool) => usedTools.has(tool)),
+        unusedInventory: inventoryTools.filter((tool) => !usedTools.has(tool)),
+        missingFromInventory: Array.from(usedTools).filter(
+          (tool) => !inventoryTools.includes(tool)
+        ),
       };
 
       // Generate recommendations
       if (analysis.inventoryVsUsage.unusedInventory.length > 0) {
-        analysis.recommendations.push(`Consider reviewing ${analysis.inventoryVsUsage.unusedInventory.length} unused tools in inventory`);
+        analysis.recommendations.push(
+          `Consider reviewing ${analysis.inventoryVsUsage.unusedInventory.length} unused tools in inventory`
+        );
       }
-      
+
       if (analysis.inventoryVsUsage.missingFromInventory.length > 0) {
-        analysis.alerts.push(`${analysis.inventoryVsUsage.missingFromInventory.length} tools used in production but not found in inventory`);
+        analysis.alerts.push(
+          `${analysis.inventoryVsUsage.missingFromInventory.length} tools used in production but not found in inventory`
+        );
       }
     }
 
@@ -539,24 +588,24 @@ class Results {
           generatedAt: new Date().toISOString(),
           toolManagerVersion: "1.0.0",
           projectsProcessed: projects.length,
-          jsonFilesAnalyzed: allAnalysisResults.totalJsonFiles || 0
+          jsonFilesAnalyzed: allAnalysisResults.totalJsonFiles || 0,
         },
-        
+
         // Section 1: Tool Usage Summary (from JSON analysis)
         toolUsageSummary: this.createToolUsageSummary(allAnalysisResults),
-        
+
         // Section 2: Matrix Inventory (from Excel, consolidated duplicates)
         matrixInventory: this.createMatrixInventory(allAnalysisResults),
-        
+
         // Section 3: Tool Life vs Machining Time Comparison
-        toolLifeComparison: this.createToolLifeComparison(allAnalysisResults)
+        toolLifeComparison: this.createToolLifeComparison(allAnalysisResults),
       };
 
       // Save to results directory
       const resultsPath = this.getResultsPath();
       FileUtils.ensureDirectoryExists(resultsPath);
-      
-      const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+      const timestamp = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
       const reportFileName = `ToolManager_Report_${timestamp}.json`;
       const reportFilePath = path.join(resultsPath, reportFileName);
 
@@ -564,10 +613,12 @@ class Results {
       Logger.info(`✓ Consolidated report saved: ${reportFileName}`);
 
       // Also save a "latest" version for easy access
-      const latestReportPath = path.join(resultsPath, "ToolManager_Latest_Report.json");
+      const latestReportPath = path.join(
+        resultsPath,
+        "ToolManager_Latest_Report.json"
+      );
       FileUtils.writeJsonFile(latestReportPath, reportData);
       Logger.info("✓ Latest report updated");
-
     } catch (err) {
       Logger.error(`Failed to save consolidated results: ${err.message}`);
     }
@@ -582,24 +633,27 @@ class Results {
       totalMachiningTimeMinutes: 0,
       totalJobsAnalyzed: 0,
       toolsUsed: {},
-      machineUsage: {}
+      machineUsage: {},
     };
 
     // Process all tool usage data from JSON files
     if (analysisResults.toolUsage) {
-      for (const [toolCode, usage] of Object.entries(analysisResults.toolUsage)) {
+      for (const [toolCode, usage] of Object.entries(
+        analysisResults.toolUsage
+      )) {
         summary.toolsUsed[toolCode] = {
           totalUsageTime: usage.totalTime || 0,
           operationCount: usage.operations || 0,
           projects: usage.projects || [],
-          averageTimePerOperation: usage.operations > 0 ? (usage.totalTime / usage.operations) : 0
+          averageTimePerOperation:
+            usage.operations > 0 ? usage.totalTime / usage.operations : 0,
         };
         summary.totalMachiningTimeMinutes += usage.totalTime || 0;
       }
     }
 
     summary.totalJobsAnalyzed = analysisResults.totalJobs || 0;
-    
+
     return summary;
   }
 
@@ -612,7 +666,7 @@ class Results {
       consolidatedTools: {},
       duplicatesFound: [],
       totalUniqueTools: 0,
-      totalInventoryQuantity: 0
+      totalInventoryQuantity: 0,
     };
 
     // Process matrix data and consolidate duplicates
@@ -626,9 +680,9 @@ class Results {
           inventory.consolidatedTools[toolCode].quantity += quantity;
           inventory.consolidatedTools[toolCode].duplicateEntries.push({
             originalEntry: tool,
-            quantity: quantity
+            quantity: quantity,
           });
-          
+
           if (!inventory.duplicatesFound.includes(toolCode)) {
             inventory.duplicatesFound.push(toolCode);
           }
@@ -636,20 +690,22 @@ class Results {
           // First occurrence
           inventory.consolidatedTools[toolCode] = {
             toolCode: toolCode,
-            description: tool.description || '',
-            diameter: tool.diameter || '',
-            specification: tool.specification || '',
+            description: tool.description || "",
+            diameter: tool.diameter || "",
+            specification: tool.specification || "",
             quantity: quantity,
-            duplicateEntries: []
+            duplicateEntries: [],
           };
         }
-        
+
         inventory.totalInventoryQuantity += quantity;
       }
     }
 
-    inventory.totalUniqueTools = Object.keys(inventory.consolidatedTools).length;
-    
+    inventory.totalUniqueTools = Object.keys(
+      inventory.consolidatedTools
+    ).length;
+
     return inventory;
   }
 
@@ -663,18 +719,28 @@ class Results {
       overallMetrics: {
         totalToolLifeMinutes: 0,
         totalMachiningTimeMinutes: 0,
-        efficiencyRatio: 0
-      }
+        efficiencyRatio: 0,
+      },
     };
 
     // Group tools by type/diameter for comparison
     const toolGroups = this.groupToolsByTypeAndDiameter(analysisResults);
 
     for (const [groupKey, group] of Object.entries(toolGroups)) {
-      const totalInventoryQuantity = group.inventory.reduce((sum, tool) => sum + tool.quantity, 0);
-      const totalUsageTime = group.usage.reduce((sum, usage) => sum + usage.totalTime, 0);
-      const estimatedToolLifePerPiece = this.estimateToolLife(group.toolType, group.diameter);
-      const totalToolLifeCapacity = totalInventoryQuantity * estimatedToolLifePerPiece;
+      const totalInventoryQuantity = group.inventory.reduce(
+        (sum, tool) => sum + tool.quantity,
+        0
+      );
+      const totalUsageTime = group.usage.reduce(
+        (sum, usage) => sum + usage.totalTime,
+        0
+      );
+      const estimatedToolLifePerPiece = this.estimateToolLife(
+        group.toolType,
+        group.diameter
+      );
+      const totalToolLifeCapacity =
+        totalInventoryQuantity * estimatedToolLifePerPiece;
 
       comparison.toolTypeAnalysis[groupKey] = {
         toolType: group.toolType,
@@ -683,18 +749,27 @@ class Results {
         totalUsageTimeMinutes: totalUsageTime,
         estimatedToolLifePerPieceMinutes: estimatedToolLifePerPiece,
         totalToolLifeCapacityMinutes: totalToolLifeCapacity,
-        utilizationPercentage: totalToolLifeCapacity > 0 ? (totalUsageTime / totalToolLifeCapacity) * 100 : 0,
-        remainingCapacityMinutes: Math.max(0, totalToolLifeCapacity - totalUsageTime),
-        status: this.determineToolStatus(totalUsageTime, totalToolLifeCapacity)
+        utilizationPercentage:
+          totalToolLifeCapacity > 0
+            ? (totalUsageTime / totalToolLifeCapacity) * 100
+            : 0,
+        remainingCapacityMinutes: Math.max(
+          0,
+          totalToolLifeCapacity - totalUsageTime
+        ),
+        status: this.determineToolStatus(totalUsageTime, totalToolLifeCapacity),
       };
 
       comparison.overallMetrics.totalToolLifeMinutes += totalToolLifeCapacity;
       comparison.overallMetrics.totalMachiningTimeMinutes += totalUsageTime;
     }
 
-    comparison.overallMetrics.efficiencyRatio = comparison.overallMetrics.totalToolLifeMinutes > 0 
-      ? (comparison.overallMetrics.totalMachiningTimeMinutes / comparison.overallMetrics.totalToolLifeMinutes) * 100 
-      : 0;
+    comparison.overallMetrics.efficiencyRatio =
+      comparison.overallMetrics.totalToolLifeMinutes > 0
+        ? (comparison.overallMetrics.totalMachiningTimeMinutes /
+            comparison.overallMetrics.totalToolLifeMinutes) *
+          100
+        : 0;
 
     return comparison;
   }
@@ -712,9 +787,11 @@ class Results {
         if (!groups[groupKey]) {
           groups[groupKey] = {
             toolType: this.extractToolType(tool.code),
-            diameter: this.extractDiameter(tool.description || tool.specification),
+            diameter: this.extractDiameter(
+              tool.description || tool.specification
+            ),
             inventory: [],
-            usage: []
+            usage: [],
           };
         }
         groups[groupKey].inventory.push(tool);
@@ -723,7 +800,9 @@ class Results {
 
     // Process usage data
     if (analysisResults.toolUsage) {
-      for (const [toolCode, usage] of Object.entries(analysisResults.toolUsage)) {
+      for (const [toolCode, usage] of Object.entries(
+        analysisResults.toolUsage
+      )) {
         const groupKey = this.createToolGroupKeyFromCode(toolCode);
         if (groups[groupKey]) {
           groups[groupKey].usage.push(usage);
@@ -739,7 +818,9 @@ class Results {
    */
   createToolGroupKey(tool) {
     const toolType = this.extractToolType(tool.code);
-    const diameter = this.extractDiameter(tool.description || tool.specification);
+    const diameter = this.extractDiameter(
+      tool.description || tool.specification
+    );
     return `${toolType}_${diameter}`;
   }
 
@@ -754,18 +835,18 @@ class Results {
    * Extract tool type from tool code (e.g., RT-8400300 -> RT-8400)
    */
   extractToolType(toolCode) {
-    if (!toolCode) return 'UNKNOWN';
+    if (!toolCode) return "UNKNOWN";
     const match = toolCode.match(/^([A-Z]+-\d+)/);
-    return match ? match[1] : toolCode.split('_')[0];
+    return match ? match[1] : toolCode.split("_")[0];
   }
 
   /**
    * Extract diameter from description (e.g., "ø5,7/6x56/12 r0.1 z4" -> 5.7)
    */
   extractDiameter(description) {
-    if (!description) return 'UNKNOWN';
+    if (!description) return "UNKNOWN";
     const match = description.match(/ø(\d+[,.]?\d*)/);
-    return match ? parseFloat(match[1].replace(',', '.')) : 'UNKNOWN';
+    return match ? parseFloat(match[1].replace(",", ".")) : "UNKNOWN";
   }
 
   /**
@@ -774,7 +855,73 @@ class Results {
   extractDiameterFromCode(toolCode) {
     // This would need to be customized based on your tool code patterns
     // For now, return UNKNOWN and rely on matrix description
-    return 'UNKNOWN';
+    return "UNKNOWN";
+  }
+
+  /**
+   * Save results to both file system and storage adapter
+   */
+  async saveToStorage(reportData) {
+    if (!this.dataManager) {
+      Logger.warn("No DataManager available - skipping storage save");
+      return;
+    }
+
+    try {
+      // Save main report
+      await this.dataManager.storage.insertOne("tool_reports", {
+        reportId: `report_${Date.now()}`,
+        generatedAt: reportData.reportInfo.generatedAt,
+        data: reportData,
+        reportType: "consolidated",
+      });
+
+      // Save individual tool data for querying
+      if (reportData.matrixToolsUsed && reportData.matrixToolsUsed.length > 0) {
+        for (const tool of reportData.matrixToolsUsed) {
+          await this.dataManager.updateToolLocation(tool.toolCode, {
+            status: "in_use",
+            lastUsed: new Date(),
+            usageTime: tool.currentUsage?.totalTime || 0,
+            location: "production",
+          });
+        }
+      }
+
+      // Log the processing
+      await this.dataManager.logExcelProcessing({
+        processingType: "tool_analysis",
+        status: "completed",
+        toolsProcessed: reportData.reportInfo.summary.matrixToolsUsed,
+        errors: [],
+      });
+
+      Logger.info("✅ Results saved to storage successfully");
+    } catch (error) {
+      Logger.error(`Failed to save to storage: ${error.message}`);
+    }
+  }
+
+  /**
+   * Load previous reports from storage
+   */
+  async loadPreviousReports(limit = 10) {
+    if (!this.dataManager) {
+      return [];
+    }
+
+    try {
+      const reports = await this.dataManager.storage.findAll(
+        "tool_reports",
+        {}
+      );
+      return reports
+        .sort((a, b) => new Date(b.generatedAt) - new Date(a.generatedAt))
+        .slice(0, limit);
+    } catch (error) {
+      Logger.error(`Failed to load previous reports: ${error.message}`);
+      return [];
+    }
   }
 
   /**
@@ -783,7 +930,8 @@ class Results {
   estimateToolLife(toolType, diameter) {
     // Basic estimation - this should be customized based on actual tool specifications
     const baseLife = 60; // 60 minutes base life
-    const diameterFactor = typeof diameter === 'number' ? Math.max(1, diameter / 5) : 1;
+    const diameterFactor =
+      typeof diameter === "number" ? Math.max(1, diameter / 5) : 1;
     return baseLife * diameterFactor;
   }
 
@@ -791,13 +939,13 @@ class Results {
    * Determine tool status based on usage vs capacity
    */
   determineToolStatus(usageTime, capacity) {
-    if (capacity === 0) return 'NO_INVENTORY';
+    if (capacity === 0) return "NO_INVENTORY";
     const utilization = (usageTime / capacity) * 100;
-    
-    if (utilization >= 90) return 'CRITICAL';
-    if (utilization >= 75) return 'WARNING';
-    if (utilization >= 50) return 'NORMAL';
-    return 'UNDERUTILIZED';
+
+    if (utilization >= 90) return "CRITICAL";
+    if (utilization >= 75) return "WARNING";
+    if (utilization >= 50) return "NORMAL";
+    return "UNDERUTILIZED";
   }
 
   /**
