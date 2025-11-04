@@ -5,6 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "node main.js",
+    "dev:tools": "nodemon main.js",
+    "start:tools": "node main.js --monitor",
     "setup": "node setup.js",
     "daily": "node processDaily.js",
     "monitor": "node main.js --monitor",
