@@ -11,8 +11,8 @@ const Logger = require("../utils/Logger");
 const FileUtils = require("../utils/FileUtils");
 
 class Results {
-  constructor(dataManager = null) {
-    this.dataManager = dataManager;
+  constructor(tempManager = null) {
+    this.tempManager = tempManager;
   }
 
   /**
@@ -65,13 +65,27 @@ class Results {
         ),
       };
 
-      // Save simplified report in project root
-      const projectRoot = path.join(__dirname, "..");
-      const reportFileName = `ToolManager_Result.json`;
-      const reportFilePath = path.join(projectRoot, reportFileName);
+      // Save simplified report using organized temp structure
+      let reportFileName = `ToolManager_Result.json`;
+      let reportFilePath;
 
-      FileUtils.writeJsonFile(reportFilePath, reportData);
-      Logger.info(`✅ Simplified report saved: ${reportFileName}`);
+      if (this.tempManager) {
+        // Save to organized temp structure
+        reportFilePath = await this.tempManager.saveToTemp(
+          reportFileName,
+          JSON.stringify(reportData, null, 2),
+          "results"
+        );
+        Logger.info(
+          `✅ Simplified report saved to organized temp: results/${reportFileName}`
+        );
+      } else {
+        // Fallback to project root (original behavior)
+        const projectRoot = path.join(__dirname, "..");
+        reportFilePath = path.join(projectRoot, reportFileName);
+        FileUtils.writeJsonFile(reportFilePath, reportData);
+        Logger.info(`✅ Simplified report saved: ${reportFileName}`);
+      }
 
       // Also save to storage adapter if available
       await this.saveToStorage(reportData);
@@ -859,46 +873,45 @@ class Results {
   }
 
   /**
-   * Save results to both file system and storage adapter
+   * Save results to both organized temp structure and storage adapter
    */
   async saveToStorage(reportData) {
-    if (!this.dataManager) {
-      Logger.warn("No DataManager available - skipping storage save");
-      return;
-    }
-
     try {
-      // Save main report
-      await this.dataManager.storage.insertOne("tool_reports", {
-        reportId: `report_${Date.now()}`,
-        generatedAt: reportData.reportInfo.generatedAt,
-        data: reportData,
-        reportType: "consolidated",
-      });
+      // If we have tempManager, save additional analysis files to organized structure
+      if (this.tempManager) {
+        // Save detailed tool analysis
+        const toolAnalysis = {
+          matrixTools: reportData.matrixTools || [],
+          nonMatrixTools: reportData.nonMatrixTools || [],
+          generatedAt: reportData.reportInfo.generatedAt,
+        };
 
-      // Save individual tool data for querying
-      if (reportData.matrixToolsUsed && reportData.matrixToolsUsed.length > 0) {
-        for (const tool of reportData.matrixToolsUsed) {
-          await this.dataManager.updateToolLocation(tool.toolCode, {
-            status: "in_use",
-            lastUsed: new Date(),
-            usageTime: tool.currentUsage?.totalTime || 0,
-            location: "production",
-          });
-        }
+        await this.tempManager.saveToTemp(
+          "tool_analysis_detailed.json",
+          JSON.stringify(toolAnalysis, null, 2),
+          "results"
+        );
+
+        // Save summary report
+        const summary = {
+          summary: reportData.reportInfo.summary,
+          generatedAt: reportData.reportInfo.generatedAt,
+        };
+
+        await this.tempManager.saveToTemp(
+          "analysis_summary.json",
+          JSON.stringify(summary, null, 2),
+          "results"
+        );
+
+        Logger.info(
+          "✅ Additional analysis files saved to organized temp structure"
+        );
       }
 
-      // Log the processing
-      await this.dataManager.logExcelProcessing({
-        processingType: "tool_analysis",
-        status: "completed",
-        toolsProcessed: reportData.reportInfo.summary.matrixToolsUsed,
-        errors: [],
-      });
-
-      Logger.info("✅ Results saved to storage successfully");
+      Logger.info("✅ Results saved successfully");
     } catch (error) {
-      Logger.error(`Failed to save to storage: ${error.message}`);
+      Logger.error(`Failed to save to organized storage: ${error.message}`);
     }
   }
 

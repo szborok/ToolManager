@@ -1,6 +1,21 @@
-# ToolManager - JavaScript Version
+# ToolManager - CNC Tool Management System
 
-A CNC Tool Management System for tracking and managing manufacturing tools.
+A sophisticated CNC Tool Management System for tracking and managing manufacturing tools with organized temporary file processing and cross-platform compatibility.
+
+## 🚀 Overview
+
+ToolManager is designed to process Excel inventory files and JSON tool usage data to provide comprehensive tool analysis and reporting. It features complete read-only processing using an organized temporary file structure for maximum data safety.
+
+### Key Features
+
+- **📊 Excel Processing**: Automated Excel inventory file processing
+- **🔍 JSON Analysis**: Tool usage analysis from manufacturing JSON files
+- **🔐 Complete Data Safety**: Read-only processing with organized temp structure
+- **🗂️ Professional Organization**: "BRK CNC Management Dashboard" temp hierarchy
+- **🌍 Cross-Platform**: Works on Windows, macOS, and Linux
+- **📈 Comprehensive Reporting**: Detailed tool analysis and utilization reports
+- **⚡ Automated Workflow**: Streamlined processing pipeline
+- **🧹 Clean Operations**: Automatic cleanup of organized temp sessions
 
 ## ⚠️ Security Notice
 
@@ -15,30 +30,22 @@ No alternative library provides the same Excel reading capabilities required for
 
 ## 🚀 Quick Start
 
-1. **Setup the application:**
+1. **Install dependencies:**
 
    ```bash
    npm install
-   npm run setup
    ```
 
-2. **Run the main application:**
+2. **Run the organized temp demo:**
 
    ```bash
-   npm start
+   node demo-temp-organized.js
    ```
 
-3. **Process daily matrix files:**
+3. **Run the main application:**
 
    ```bash
-   # Process files once
-   npm run daily
-
-   # Watch for new files automatically
-   npm run daily-watch
-
-   # Check processing statistics
-   npm run daily-stats
+   node main.js
    ```
 
 ## 📁 Project Structure
@@ -46,106 +53,128 @@ No alternative library provides the same Excel reading capabilities required for
 ```
 ToolManager/
 ├── main.js                    # Main application entry point
-├── processDaily.js            # Daily file processing CLI
+├── demo-temp-organized.js     # Demo for organized temp structure
 ├── setup.js                   # Setup and verification script
 ├── src/                       # Source code
-│   ├── config/               # Configuration files
-│   ├── enums/                # Enumerations
-│   ├── factories/            # Factory classes
-│   ├── models/               # Data models
-│   ├── services/             # Business logic services
-│   └── utils/                # Utility classes
-├── config/                    # Application configuration
-├── companyConfig/            # Company-specific settings
-├── test_data/                # Test data and sample files
-│   ├── filesToProcess/      # Sample matrix files for testing
-│   ├── filesProcessedArchive/ # Test processed files archive
-│   ├── sampleExcels/        # Reference Excel files for tool types
-│   ├── analysis/            # Analysis output files
-│   └── data/                # Test work tracking and archive
-├── dev/                      # Development utilities
+│   ├── Analyzer.js           # Tool usage analysis
+│   ├── DataManager.js        # Data management operations
+│   ├── Executor.js           # Main orchestration logic
+│   ├── ExcelProcessor.js     # Excel file processing
+│   ├── Matrix.js             # Matrix data handling
+│   ├── Project.js            # Project data model
+│   ├── Results.js            # Result file management
+│   ├── Scanner.js            # File scanning and discovery
+│   ├── Tool.js               # Tool data model
+│   ├── ToolFactory.js        # Tool object creation
+│   └── ToolLogic.js          # Tool business logic
+├── utils/                     # Utility modules
+│   ├── CleanupService.js     # Cleanup operations
+│   ├── TempFileManager.js    # Organized temp file management
+│   └── Logger.js             # Logging infrastructure
+├── config.js                  # Application configuration
+├── test_data/                # Test data
+│   └── E-Cut,MFC,XF,XFeed készlet.xlsx  # Sample Excel file
 ├── logs/                     # Application logs
-├── temp/                     # Temporary files
-└── _old/                     # Legacy Java files (archived)
+└── temp/                     # Legacy temp folder (replaced by organized structure)
 ```
 
-## 🔧 Configuration
+## � Organized Temp Structure
 
-### Main Configuration
+ToolManager uses a professional organized temporary file structure for complete data safety and cross-platform compatibility:
 
-- `companyConfig/config.properties` - Main application settings
-- `config/tool-definitions.json` - Tool categories and identification rules
+### Organized Temp Hierarchy
 
-### Key Settings
+```
+[OS Temp Directory]/BRK CNC Management Dashboard/
+└── ToolManager/
+    └── session_[timestamp]_[id]/
+        ├── input_files/     # Original JSON files copied here
+        ├── processed_files/ # Sanitized JSON files
+        ├── results/         # Analysis results & reports
+        └── excel_files/     # Excel inventory files
+```
 
-- **Planning Days**: Default 7 days ahead for work scheduling
-- **Tool Categories**: ECUT, MFC, XF, XFEED
-- **File Patterns**: Configurable filename patterns with date placeholders
-- **Work Tracking**: Automatic JSON file generation for work items
+### How It Works
 
-## 📊 Daily Workflow
+1. **Auto OS Detection**: Uses `os.tmpdir()` to automatically detect the correct temp directory:
 
-1. **Receive Matrix File**: Email attachment `Euroform_Matrix_YYYY-MM-DD.xlsx`
-2. **Save to Processing**: Drop file into `test_data/filesToProcess/` (test) or production folder
-3. **Run Processing**: Use `npm run daily` or file watcher
-4. **Work Items Created**: JSON files generated in `test_data/data/workTracking/` (test) or production folder
-5. **File Archived**: Original file moved to `test_data/filesProcessedArchive/` (test) or production folder
+   - **macOS**: `/var/folders/.../T/` or `/tmp/`
+   - **Windows**: `C:\Users\[Username]\AppData\Local\Temp\`
+   - **Linux**: `/tmp/`
 
-> **Note**: In development, all paths point to `test_data/` folders. For production deployment, update `companyConfig/config.properties` with actual server paths.
+2. **Professional Organization**: Creates "BRK CNC Management Dashboard" main folder with app-specific subfolders
+
+3. **Session Management**: Each processing run gets a unique session directory
+
+4. **File Type Organization**: Excel files, JSON files, and results are organized separately
+
+5. **Safe Processing**: All analysis occurs on organized temp copies, never touching originals
+
+6. **Automatic Cleanup**: Organized temp sessions are cleaned up automatically
+
+### Key Benefits
+
+- **🛡️ Data Safety**: Original files are never at risk of modification
+- **🗂️ Professional Organization**: Enterprise-ready temp structure
+- **🌍 Cross-Platform**: Seamless operation on all operating systems
+- **⚡ Performance**: Organized structure improves processing efficiency
+- **🔍 Transparency**: Easy to inspect and verify temp operations
+- **🧹 Clean Operation**: Professional cleanup with no files left behind
+
+### Testing Organized Temp Functionality
+
+```bash
+# Test the organized temp functionality
+node demo-temp-organized.js
+```
+
+## 📊 Processing Workflow
+
+1. **Excel Processing**: Processes tool inventory Excel files using organized temp structure
+2. **JSON Discovery**: Finds and analyzes tool usage JSON files from JSONScanner
+3. **Organized Copying**: Copies all files to organized "BRK CNC Management Dashboard/ToolManager" temp structure
+4. **Data Sanitization**: Cleans and validates JSON data in temp processing
+5. **Analysis**: Performs tool usage analysis and inventory comparison
+6. **Report Generation**: Creates comprehensive analysis reports in organized temp results
+7. **Cleanup**: Automatically cleans organized temp session
 
 ## 🛠 Available Scripts
 
-| Script                | Description                                 |
-| --------------------- | ------------------------------------------- |
-| `npm start`           | Run main application                        |
-| `npm run setup`       | Verify configuration and create directories |
-| `npm run daily`       | Process all new matrix files                |
-| `npm run daily-watch` | Start file watcher for automatic processing |
-| `npm run daily-stats` | Show processing statistics                  |
-| `npm run analyze`     | Analyze Excel file structure (development)  |
-| `npm run test-excel`  | Test Excel processor (development)          |
+| Script                        | Description                              |
+| ----------------------------- | ---------------------------------------- |
+| `node main.js`                | Run main application with organized temp |
+| `node demo-temp-organized.js` | Demo organized temp structure            |
+| `npm install`                 | Install dependencies                     |
 
-## 🔍 Tool Identification
+## 🔍 Tool Analysis Features
 
-The system automatically identifies tools based on:
+The system provides comprehensive tool analysis including:
 
-- **Prefixes**: Tool codes starting with specific patterns
-- **Keywords**: Tool descriptions containing specific terms
-- **Confidence Scoring**: Minimum 70% confidence required
+- **📊 Inventory Processing**: Automated Excel tool inventory processing
+- **🔍 Usage Analysis**: Tool usage analysis from manufacturing JSON files
+- **📈 Utilization Reports**: Tool utilization and efficiency reporting
+- **⚖️ Inventory Comparison**: Matrix inventory vs actual usage comparison
+- **🎯 Recommendations**: Tool management recommendations and alerts
 
-### Supported Tool Categories
+## 🔗 Integration with BRK CNC Management Dashboard
 
-| Category | Description                    | Prefixes     | Priority |
-| -------- | ------------------------------ | ------------ | -------- |
-| ECUT     | End mills and cutting tools    | EC, ECUT, EM | High     |
-| MFC      | Multi-functional cutting tools | MFC, MF      | High     |
-| XF       | XF finishing tools             | XF, FIN      | Medium   |
-| XFEED    | XFeed drilling tools           | XF, FEED, DR | Medium   |
+ToolManager integrates seamlessly with the BRK CNC Management Dashboard ecosystem:
 
-## 📝 Work Tracking
-
-Work items are automatically created as JSON files with:
-
-- **Metadata**: Source file, dates, tool counts
-- **Tool Data**: Identified tools with specifications
-- **Processing Status**: Started, completed, results
-- **Scheduling**: Default 7 days from file date
-
-## ⚠️ Known Issues
-
-- **XLSX Security**: Current xlsx library has known vulnerabilities (no fix available)
-- **Tests**: Test framework not yet implemented
-- **Validation**: Tool identification rules may need refinement
+- **🔗 JSONScanner Integration**: Uses JSONScanner output for tool usage analysis
+- **📊 Unified Reporting**: Compatible reporting format with other dashboard components
+- **🗂️ Organized Structure**: Professional temp structure ready for dashboard integration
+- **🔄 Data Flow**: Processes JSONScanner results for comprehensive tool management
 
 ## 🔗 Related Projects
 
-- **json_scanner**: Quality control system for NC files
-- **Legacy Java Version**: Archived in `_old/` directory
+- **JSONScanner**: Quality control system for NC files (provides tool usage data)
+- **CNCManagementDashboard**: Main dashboard application
+- **BRK CNC Management Dashboard**: Unified ecosystem for manufacturing management
 
 ## 📄 License
 
-ISC License - Euroform Manufacturing
+ISC License - BRK CNC Management Dashboard
 
 ---
 
-_Generated: October 28, 2025_
+_Updated: November 4, 2025 - Organized Temp Structure Implementation_

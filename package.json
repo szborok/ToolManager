@@ -1,28 +1,43 @@
 {
   "name": "tool-manager",
-  "version": "1.0.0",
-  "description": "CNC Tool Management System for tracking and managing manufacturing tools",
+  "version": "2.0.0",
+  "description": "CNC ToolManager with organized temp structure for BRK CNC Management Dashboard",
   "main": "main.js",
   "scripts": {
     "start": "node main.js",
     "setup": "node setup.js",
     "daily": "node processDaily.js",
-    "test": "echo \"Warning: No tests specified yet\" && exit 0"
+    "monitor": "node main.js --monitor",
+    "archive": "node main.js --archive",
+    "cleanup": "node main.js --cleanup",
+    "demo": "node demo-temp-organized.js",
+    "unified-demo": "node unified-temp-demo.js",
+    "dev": "nodemon main.js",
+    "test": "node main.js --test"
   },
   "keywords": [
     "cnc",
-    "tools",
+    "excel-processing",
     "manufacturing",
-    "management"
+    "tool-management",
+    "temp-structure",
+    "cross-platform",
+    "brk-dashboard"
   ],
-  "author": "Euroform",
-  "license": "ISC",
+  "author": "BRK CNC Management Dashboard",
+  "license": "MIT",
   "dependencies": {
     "chokidar": "^3.6.0",
     "uuid": "^9.0.1",
     "xlsx": "^0.18.5",
     "chalk": "^4.1.2",
-    "mongodb": "^6.3.0"
+    "mongodb": "^6.3.0",
+    "exceljs": "^4.4.0",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   },
   "engines": {
     "node": ">=14.0.0"
