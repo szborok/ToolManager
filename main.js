@@ -8,12 +8,13 @@ const config = require("./config");
 function parseArguments() {
   const args = process.argv.slice(2);
   const options = {
-    mode: config.processing.autoMode ? "auto" : "manual",
+    mode: config.app.autoMode ? "auto" : "manual",
     projectPath: null,
     forceReprocess: false,
     cleanup: false,
     cleanupStats: false,
     setup: false,
+    workingFolder: null,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -44,6 +45,10 @@ function parseArguments() {
       case "--setup":
         options.setup = true;
         break;
+      case "--working-folder":
+        options.workingFolder = args[i + 1];
+        i++; // Skip next argument
+        break;
       case "--help":
         showHelp();
         process.exit(0);
@@ -69,6 +74,7 @@ Options:
   --project <path>     Process specific Excel file path (manual mode only)
   --force              Force reprocess even if result files exist
   --setup              Run setup and configuration verification
+  --working-folder <path> Override temp directory with user-defined working folder
   --help               Show this help message
 
 Test Mode Information:
@@ -91,11 +97,18 @@ Purpose:
   - Compare tool requirements against available inventory
   - Support manufacturing planning and tool management
 
+Read-Only Operation:
+  ✅ Original files are NEVER modified
+  ✅ All processing uses organized temp structure
+  ✅ Results saved to temp/BRK CNC Management Dashboard/ToolManager/
+  ✅ Use --working-folder to specify custom temp location
+
 Examples:
   node main.js --manual --project "path/to/matrix.xlsx"
   node main.js --auto --force
   node main.js --cleanup (removes all generated files)
   node main.js --setup (run initial setup)
+  node main.js --working-folder "D:/CNC_Processing" (custom temp location)
   `);
 }
 
@@ -118,10 +131,10 @@ async function main() {
 
     // Handle special operations first
     if (options.setup) {
-      console.log("� Running setup...");
+      console.log("🔧 Running setup...");
       const setup = require("./setup");
       await setup.run();
-      return;
+      process.exit(0);
     }
 
     if (options.cleanup || options.cleanupStats) {
@@ -138,18 +151,24 @@ async function main() {
       } else {
         await cleanup.cleanup();
       }
-      return;
+      process.exit(0);
     }
 
     // Apply command line overrides to config
     if (options.mode === "auto") {
-      config.processing.autoMode = true;
+      config.app.autoMode = true;
     } else if (options.mode === "manual") {
-      config.processing.autoMode = false;
+      config.app.autoMode = false;
     }
 
     if (options.forceReprocess) {
       config.processing.preventReprocessing = false;
+    }
+    
+    // Apply working folder override if provided
+    if (options.workingFolder) {
+      config.app.userDefinedWorkingFolder = options.workingFolder;
+      console.log(`📁 Using user-defined working folder: ${options.workingFolder}`);
     }
 
     // Create and initialize DataManager

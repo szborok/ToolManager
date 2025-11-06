@@ -15,7 +15,8 @@ class Executor {
     this.dataManager = dataManager;
     this.scanner = new Scanner();
     this.analyzer = new Analyzer();
-    this.results = new Results(dataManager);
+    // Always pass tempManager to Results for read-only processing
+    this.results = new Results(this.scanner.tempManager);
     this.isRunning = false;
     this.manualQueue = [];
   }
@@ -196,11 +197,13 @@ class Executor {
       }
     } catch (err) {
       Logger.error(`Manual project processing failed: ${err.message}`);
+      this.stop();
+      process.exit(1);
     }
 
-    Logger.info("Manual project finished. Resuming autorun...");
-    config.app.autoMode = true;
-    await this.start();
+    Logger.info("Manual project finished.");
+    this.stop();
+    process.exit(0);
   }
 
   /**
@@ -233,8 +236,12 @@ class Executor {
       }
 
       Logger.info("Manual mode processing completed.");
+      this.stop();
+      process.exit(0);
     } catch (err) {
       Logger.error(`Manual mode failed: ${err.message}`);
+      this.stop();
+      process.exit(1);
     }
   }
 

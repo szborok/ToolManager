@@ -1,23 +1,29 @@
-# ToolManager - CNC Tool Management System
+# ToolManager
 
-A sophisticated CNC Tool Management System for tracking and managing manufacturing tools with organized temporary file processing and cross-platform compatibility.
+[![Node.js](https://img.shields.io/badge/Node.js-14%2B-green.svg)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🚀 Overview
+A professional Node.js-based CNC tool tracking system that processes Excel inventory files and JSON tool usage data to generate comprehensive tool analysis and work tracking reports. Features **complete read-only processing** with organized temporary file structure for maximum data safety.
 
-ToolManager is designed to process Excel inventory files and JSON tool usage data to provide comprehensive tool analysis and reporting. It features complete read-only processing using an organized temporary file structure for maximum data safety.
+## 🎯 Features
 
-### Key Features
+### ✨ **Complete Read-Only Processing**
+- **Zero Risk**: Original files are NEVER modified
+- **Organized Temp Structure**: Professional `BRK CNC Management Dashboard/ToolManager/` hierarchy
+- **User-Defined Working Folders**: Custom temp locations via `--working-folder` CLI option
+- **Session Management**: Compatible with JSONScanner session tracking
 
-- **📊 Excel Processing**: Automated Excel inventory file processing
-- **🔍 JSON Analysis**: Tool usage analysis from manufacturing JSON files
-- **🔐 Complete Data Safety**: Read-only processing with organized temp structure
-- **🗂️ Professional Organization**: "BRK CNC Management Dashboard" temp hierarchy
-- **🌍 Cross-Platform**: Works on Windows, macOS, and Linux
-- **📈 Comprehensive Reporting**: Detailed tool analysis and utilization reports
-- **⚡ Automated Workflow**: Streamlined processing pipeline
-- **🧹 Clean Operations**: Automatic cleanup of organized temp sessions
+### 🔧 **CNC Tool Management**
+- **Excel Matrix Processing**: Parses complex Excel inventory files with ECUT/MFC/XF/XFEED categorization
+- **Tool Requirement Analysis**: Extracts tool needs from project data
+- **Work Tracking Generation**: Creates JSON files for upcoming tool requirements
+- **Inventory Comparison**: Matches requirements against available tools
 
-## ⚠️ Security Notice
+### 📊 **Data Processing**
+- **Multi-Format Support**: Excel (.xlsx) and JSON file processing
+- **Tool Categorization**: Automatic classification by naming patterns
+- **Dual Storage**: Local JSON files and MongoDB integration
+- **Results Export**: Organized analysis output with export functionality
 
 This application uses the `xlsx` library which has known security vulnerabilities. This is acceptable for our use case because:
 
@@ -151,10 +157,22 @@ node demo-temp-organized.js
 The system provides comprehensive tool analysis including:
 
 - **📊 Inventory Processing**: Automated Excel tool inventory processing
-- **🔍 Usage Analysis**: Tool usage analysis from manufacturing JSON files
-- **📈 Utilization Reports**: Tool utilization and efficiency reporting
-- **⚖️ Inventory Comparison**: Matrix inventory vs actual usage comparison
-- **🎯 Recommendations**: Tool management recommendations and alerts
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/new-tool-category`)
+3. Add your tool category patterns to `config.js`
+4. Test with `node demo-temp-organized.js`
+5. Commit changes (`git commit -am 'Add new tool category'`)
+6. Push to branch (`git push origin feature/new-tool-category`)
+7. Create a Pull Request
+
+### Adding Tool Categories
+
+1. Update tool patterns in `config.js`
+2. Modify parsing logic in `src/Matrix.js`
+3. Test with sample Excel files
+4. Update documentation
 
 ## 🔗 Integration with BRK CNC Management Dashboard
 
@@ -169,9 +187,23 @@ ToolManager integrates seamlessly with the BRK CNC Management Dashboard ecosyste
 
 - **JSONScanner**: Quality control system for NC files (provides tool usage data)
 - **CNCManagementDashboard**: Main dashboard application
-- **BRK CNC Management Dashboard**: Unified ecosystem for manufacturing management
+- **ClampingPlateManager**: Manages CNC clamping plates and work orders
 
 ## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built for CNC tool inventory management
+- Designed for complete data safety
+- Excel processing with `xlsx` library
+- Compatible with JSONScanner ecosystem
+- Professional manufacturing workflow support
+
+---
+
+**Note**: This system prioritizes data safety through complete read-only processing. All operations use organized temp folder structures, ensuring original tool inventory data remains untouched while providing comprehensive analysis and work tracking capabilities.
 
 ISC License - BRK CNC Management Dashboard
 

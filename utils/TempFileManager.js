@@ -10,15 +10,27 @@ const path = require("path");
 const os = require("os");
 const crypto = require("crypto");
 const Logger = require("./Logger");
+const config = require("../config");
 
 class TempFileManager {
   constructor(appName = "ToolManager") {
-    // Create organized hierarchy: temp/BRK CNC Management Dashboard/AppName/
-    this.tempBasePath = path.join(os.tmpdir(), "BRK CNC Management Dashboard");
+    // Support user-defined working folder like JSONScanner
+    if (config.app.userDefinedWorkingFolder) {
+      this.tempBasePath = path.join(config.app.userDefinedWorkingFolder, config.app.tempBaseName || "BRK CNC Management Dashboard");
+    } else {
+      // Create organized hierarchy: temp/BRK CNC Management Dashboard/AppName/
+      this.tempBasePath = path.join(os.tmpdir(), config.app.tempBaseName || "BRK CNC Management Dashboard");
+    }
+    
     this.appName = appName;
     this.appPath = path.join(this.tempBasePath, this.appName);
-    this.sessionId = this.generateSessionId();
-    this.sessionPath = path.join(this.appPath, this.sessionId);
+    
+    if (config.app.usePersistentTempFolder) {
+      this.sessionPath = path.join(this.appPath, "persistent");
+    } else {
+      this.sessionId = this.generateSessionId();
+      this.sessionPath = path.join(this.appPath, this.sessionId);
+    }
 
     // Create organized subdirectories for different types of files
     this.inputFilesPath = path.join(this.sessionPath, "input_files");
@@ -29,6 +41,7 @@ class TempFileManager {
     this.fileHashes = new Map(); // Track file hashes for change detection
     this.copyQueue = new Map(); // Track copy operations
     this.pathMapping = new Map(); // Map temp paths back to original paths
+    this.currentSessionId = this.generateSessionId(); // Session tracking like JSONScanner
 
     this.ensureSessionDirectory();
   }
@@ -526,6 +539,60 @@ class TempFileManager {
     } catch (error) {
       Logger.warn(`Failed to cleanup old sessions: ${error.message}`);
     }
+  }
+
+  /**
+   * Check if a file has changed compared to its temp copy (like JSONScanner)
+   * @param {string} sourcePath - Source file path
+   * @param {string} tempPath - Temp file path
+   * @returns {boolean} - True if file has changed or doesn't exist in temp
+   */
+  async hasFileChanged(sourcePath, tempPath) {
+    try {
+      // If temp file doesn't exist, consider it changed
+      if (!fs.existsSync(tempPath)) {
+        return true;
+      }
+
+      // Check stored hash information
+      const storedInfo = this.fileHashes.get(sourcePath);
+      const sourceStats = fs.statSync(sourcePath);
+
+      if (!storedInfo) {
+        // No stored info, consider changed
+        return true;
+      }
+
+      // Quick check: modification time
+      if (sourceStats.mtime.getTime() !== storedInfo.mtime.getTime()) {
+        // File might have changed, verify with hash
+        const currentHash = await this.calculateFileHash(sourcePath);
+
+        if (currentHash !== storedInfo.hash) {
+          return true;
+        }
+      }
+
+      return false;
+    } catch (error) {
+      Logger.warn(
+        `Error checking file changes for ${sourcePath}: ${error.message}`
+      );
+      return true; // Assume changed if we can't determine
+    }
+  }
+
+  /**
+   * Get session information (like JSONScanner)
+   * @returns {Object} - Session information
+   */
+  getSessionInfo() {
+    return {
+      sessionId: this.currentSessionId,
+      tempPath: this.sessionPath,
+      trackedFiles: this.fileHashes.size,
+      isPersistent: config.app.usePersistentTempFolder,
+    };
   }
 }
 

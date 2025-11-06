@@ -69,23 +69,20 @@ class Results {
       let reportFileName = `ToolManager_Result.json`;
       let reportFilePath;
 
-      if (this.tempManager) {
-        // Save to organized temp structure
-        reportFilePath = await this.tempManager.saveToTemp(
-          reportFileName,
-          JSON.stringify(reportData, null, 2),
-          "results"
-        );
-        Logger.info(
-          `✅ Simplified report saved to organized temp: results/${reportFileName}`
-        );
-      } else {
-        // Fallback to project root (original behavior)
-        const projectRoot = path.join(__dirname, "..");
-        reportFilePath = path.join(projectRoot, reportFileName);
-        FileUtils.writeJsonFile(reportFilePath, reportData);
-        Logger.info(`✅ Simplified report saved: ${reportFileName}`);
+      // Always use organized temp structure - no fallback to project root
+      if (!this.tempManager) {
+        throw new Error("TempManager is required for read-only processing. No files will be written to original directories.");
       }
+
+      // Save to organized temp structure
+      reportFilePath = await this.tempManager.saveToTemp(
+        reportFileName,
+        JSON.stringify(reportData, null, 2),
+        "results"
+      );
+      Logger.info(
+        `✅ Simplified report saved to organized temp: results/${reportFileName}`
+      );
 
       // Also save to storage adapter if available
       await this.saveToStorage(reportData);
@@ -593,7 +590,7 @@ class Results {
    * @param {Array} projects - All processed projects
    * @param {Object} allAnalysisResults - Combined analysis results
    */
-  saveConsolidatedResults(projects, allAnalysisResults) {
+  async saveConsolidatedResults(projects, allAnalysisResults) {
     try {
       Logger.info("Creating consolidated ToolManager report...");
 
@@ -615,24 +612,30 @@ class Results {
         toolLifeComparison: this.createToolLifeComparison(allAnalysisResults),
       };
 
-      // Save to results directory
-      const resultsPath = this.getResultsPath();
-      FileUtils.ensureDirectoryExists(resultsPath);
+      // Save to organized temp structure only - no original directory writes
+      if (!this.tempManager) {
+        throw new Error("TempManager is required for read-only processing. No files will be written to original directories.");
+      }
 
       const timestamp = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
       const reportFileName = `ToolManager_Report_${timestamp}.json`;
-      const reportFilePath = path.join(resultsPath, reportFileName);
-
-      FileUtils.writeJsonFile(reportFilePath, reportData);
-      Logger.info(`✓ Consolidated report saved: ${reportFileName}`);
-
-      // Also save a "latest" version for easy access
-      const latestReportPath = path.join(
-        resultsPath,
-        "ToolManager_Latest_Report.json"
+      
+      // Save to temp structure
+      const reportFilePath = await this.tempManager.saveToTemp(
+        reportFileName,
+        JSON.stringify(reportData, null, 2),
+        "results"
       );
-      FileUtils.writeJsonFile(latestReportPath, reportData);
-      Logger.info("✓ Latest report updated");
+      Logger.info(`✓ Consolidated report saved to temp: results/${reportFileName}`);
+
+      // Also save a "latest" version for easy access in temp
+      const latestReportFileName = "ToolManager_Latest_Report.json";
+      await this.tempManager.saveToTemp(
+        latestReportFileName,
+        JSON.stringify(reportData, null, 2),
+        "results"
+      );
+      Logger.info("✓ Latest report updated in temp structure");
     } catch (err) {
       Logger.error(`Failed to save consolidated results: ${err.message}`);
     }

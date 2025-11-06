@@ -8,6 +8,11 @@ const config = {
     scanIntervalMs: 60000, // 60 seconds - same as json_scanner
     logLevel: "info",
     enableDetailedLogging: true,
+    
+    // Read-only processing settings (like JSONScanner)
+    usePersistentTempFolder: true, // Use organized temp structure
+    tempBaseName: "BRK CNC Management Dashboard", // Organized temp folder name
+    userDefinedWorkingFolder: null, // User can override temp location
   },
   storage: {
     type: process.env.STORAGE_TYPE || "auto", // 'auto', 'local', 'mongodb'
