@@ -76,11 +76,12 @@ const config = {
       archive: path.join(__dirname, "working_data", "data", "archive"),
       analysis: path.join(__dirname, "working_data", "analysis"),
 
-      // JSON files from CNC machines (same as json_scanner - read-only)
+      // JSON files from CNC machines (same as JSONScanner - read-only)
       jsonScanPath: path.join(
         __dirname,
         "..",
-        "json_scanner",
+        "JSONScanner",
+        "data",
         "test_data",
         "testPathHumming_auto"
       ),
