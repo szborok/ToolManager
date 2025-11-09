@@ -61,7 +61,12 @@ const config = {
       testDataPath: path.join(__dirname, "data", "test_source_data"),
 
       // Sample Excel files for development - to identify monitored tools
-      sampleExcelPath: path.join(__dirname, "data", "test_source_data", "testExcel"),
+      sampleExcelPath: path.join(
+        __dirname,
+        "data",
+        "test_source_data",
+        "testExcel"
+      ),
 
       // Working directories for actual processing during testing
       filesToProcess: path.join(__dirname, "working_data", "filesToProcess"),
@@ -79,18 +84,16 @@ const config = {
       archive: path.join(__dirname, "working_data", "data", "archive"),
       analysis: path.join(__dirname, "working_data", "analysis"),
 
-      // JSON files from CNC machines (same as JSONScanner - read-only)
-      jsonScanPath: path.join(
-        __dirname,
-        "..",
-        "JSONScanner",
-        "data",
-        "test_source_data",
-        "testPathHumming_auto"
-      ),
+      // JSON files from CNC machines (local test data)
+      jsonScanPath: path.join(__dirname, "data", "test_source_data", "testJSON"),
 
       // Excel files directory (scan for any Excel files here in test mode)
-      excelScanPath: path.join(__dirname, "data", "test_source_data", "testExcel"),
+      excelScanPath: path.join(
+        __dirname,
+        "data",
+        "test_source_data",
+        "testExcel"
+      ),
 
       // Configuration files (schedule file can be in test_source_data if needed)
       scheduleFile: path.join(
