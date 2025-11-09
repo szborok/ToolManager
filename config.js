@@ -85,7 +85,12 @@ const config = {
       analysis: path.join(__dirname, "working_data", "analysis"),
 
       // JSON files from CNC machines (local test data)
-      jsonScanPath: path.join(__dirname, "data", "test_source_data", "testJSON"),
+      jsonScanPath: path.join(
+        __dirname,
+        "data",
+        "test_source_data",
+        "testJSON"
+      ),
 
       // Excel files directory (scan for any Excel files here in test mode)
       excelScanPath: path.join(
