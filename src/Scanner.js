@@ -561,6 +561,21 @@ class Scanner {
 
     return toolUsage;
   }
+
+  /**
+   * Scan with path resolution for manual mode compatibility.
+   * This is called by Executor.runManualMode().
+   */
+  async scanWithPathResolution() {
+    return await this.performScan();
+  }
+
+  /**
+   * Get processed projects (compatibility method).
+   */
+  getProjects() {
+    return this.projects;
+  }
 }
 
 module.exports = Scanner;
