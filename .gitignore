@@ -64,26 +64,34 @@ filesToProcess/*.json
 dist/
 build/
 
-# ToolManager specific
+# ToolManager specific temp files
 working_data/filesToProcess/*.xlsx
 working_data/filesToProcess/*.json
 working_data/resultsArchive/
+temp/
 
 # Generated work tracking files
 *_work_tracking.json
 *_tool_analysis.json
+*_BRK_*.json
 
 # Read-only processing temp folders
 BRK_CNC_Management_Dashboard/
 "BRK CNC Management Dashboard"/
+data/test_processed_data/
 
-# Session files
+# Session and tracking files
 *.session
 
-# Test artifacts
+# Test and development artifacts
 test_output/
 test_results/
+archive/
 
 # Excel processing temp files
 temp_excel/
 excel_backup/
+
+# Development logs (keep recent production logs)
+logs/app-2025-10-*.log
+logs/app-2025-11-0[1-4].log

@@ -15,6 +15,9 @@ function parseArguments() {
     cleanupStats: false,
     setup: false,
     workingFolder: null,
+    demo: false,
+    listResults: false,
+    exportResults: null,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -49,6 +52,16 @@ function parseArguments() {
         options.workingFolder = args[i + 1];
         i++; // Skip next argument
         break;
+      case "--demo-temp":
+        options.demo = true;
+        break;
+      case "--list-results":
+        options.listResults = true;
+        break;
+      case "--export-results":
+        options.exportResults = args[i + 1];
+        i++; // Skip next argument
+        break;
       case "--help":
         showHelp();
         process.exit(0);
@@ -57,6 +70,84 @@ function parseArguments() {
   }
 
   return options;
+}
+
+async function runSetup() {
+  const fs = require('fs');
+  const path = require('path');
+  
+  console.log("🔧 Setting up ToolManager directories...");
+  
+  const createDirectory = (dirPath, description) => {
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+      console.log(`✅ Created ${description}: ${dirPath}`);
+    } else {
+      console.log(`✓ ${description} exists: ${dirPath}`);
+    }
+  };
+
+  try {
+    // Create test processed data directory
+    createDirectory(config.app.testProcessedDataPath, "Test processed data directory");
+    
+    // Create working directories for test mode
+    if (config.app.testMode) {
+      createDirectory(config.paths.test.filesToProcess, "Test files to process");
+      createDirectory(config.paths.test.filesProcessed, "Test processed files archive");
+      createDirectory(config.paths.test.workTracking, "Test work tracking");
+      createDirectory(config.paths.test.analysis, "Test analysis output");
+    }
+    
+    console.log("✅ Setup completed successfully");
+    console.log(`📁 Test mode: ${config.app.testMode ? 'ENABLED' : 'DISABLED'}`);
+    console.log(`📁 Temp processing: ${config.app.testProcessedDataPath}`);
+  } catch (error) {
+    console.error("❌ Setup failed:", error.message);
+    throw error;
+  }
+}
+
+function cleanDemoWorkingFolder() {
+  const fs = require('fs');
+  const path = require('path');
+  
+  try {
+    const demoPath = config.app.testProcessedDataPath;
+    const brkPath = path.join(demoPath, 'BRK CNC Management Dashboard');
+    
+    if (fs.existsSync(brkPath)) {
+      console.log('🧹 Cleaning demo working folder...');
+      
+      // Remove contents but preserve folder structure
+      const removeContents = (dirPath) => {
+        if (fs.existsSync(dirPath)) {
+          const items = fs.readdirSync(dirPath);
+          for (const item of items) {
+            const itemPath = path.join(dirPath, item);
+            const stat = fs.statSync(itemPath);
+            if (stat.isDirectory()) {
+              removeContents(itemPath); // Recursive
+              try {
+                fs.rmdirSync(itemPath);
+              } catch (e) {
+                // Directory not empty, that's ok
+              }
+            } else {
+              fs.unlinkSync(itemPath);
+            }
+          }
+        }
+      };
+      
+      removeContents(brkPath);
+      console.log('✅ Demo working folder cleaned successfully');
+    } else {
+      console.log('ℹ️  Demo working folder already clean');
+    }
+  } catch (error) {
+    console.log('⚠️  Could not clean demo working folder:', error.message);
+  }
 }
 
 function showHelp() {
@@ -75,6 +166,9 @@ Options:
   --force              Force reprocess even if result files exist
   --setup              Run setup and configuration verification
   --working-folder <path> Override temp directory with user-defined working folder
+  --demo-temp          Run temp processing demonstration (read-only by design)
+  --list-results       List all result files in current temp session
+  --export-results <dir> Export current temp results to specified directory
   --help               Show this help message
 
 Test Mode Information:
@@ -132,8 +226,7 @@ async function main() {
     // Handle special operations first
     if (options.setup) {
       console.log("🔧 Running setup...");
-      const setup = require("./setup");
-      await setup.run();
+      await runSetup();
       process.exit(0);
     }
 
@@ -151,6 +244,37 @@ async function main() {
       } else {
         await cleanup.cleanup();
       }
+      process.exit(0);
+    }
+
+    if (options.demo) {
+      console.log("🎯 Running ToolManager temp processing demonstration...");
+      console.log("📁 All processing will use organized temp structure (read-only by design)");
+      
+      // Clean previous demo data
+      cleanDemoWorkingFolder();
+      
+      // Load the demo functionality from archived demo file
+      const demoModule = require("./archive/demo-temp-organized");
+      await demoModule.runDemo();
+      
+      // Clean up after demo
+      cleanDemoWorkingFolder();
+      console.log("✅ Demo completed successfully");
+      process.exit(0);
+    }
+
+    if (options.listResults) {
+      console.log("📋 Listing current temp session results...");
+      // TODO: Implement result listing functionality
+      console.log("ℹ️  Result listing not yet implemented");
+      process.exit(0);
+    }
+
+    if (options.exportResults) {
+      console.log(`📤 Exporting temp results to: ${options.exportResults}`);
+      // TODO: Implement result export functionality
+      console.log("ℹ️  Result export not yet implemented");
       process.exit(0);
     }
 

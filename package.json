@@ -4,18 +4,14 @@
   "description": "CNC ToolManager with organized temp structure for BRK CNC Management Dashboard",
   "main": "main.js",
   "scripts": {
-    "start": "node main.js",
-    "dev:tools": "nodemon main.js",
-    "start:tools": "node main.js --monitor",
-    "setup": "node setup.js",
-    "daily": "node processDaily.js",
-    "monitor": "node main.js --monitor",
-    "archive": "node main.js --archive",
+    "start": "node main.js --auto",
+    "auto": "node main.js --auto",
+    "manual": "node main.js --manual",
+    "setup": "node main.js --setup",
     "cleanup": "node main.js --cleanup",
-    "demo": "node demo-temp-organized.js",
-    "unified-demo": "node unified-temp-demo.js",
-    "dev": "nodemon main.js",
-    "test": "node main.js --test"
+    "demo": "node main.js --demo-temp",
+    "list-results": "node main.js --list-results",
+    "export-results": "node main.js --export-results"
   },
   "keywords": [
     "cnc",
@@ -34,12 +30,7 @@
     "xlsx": "^0.18.5",
     "chalk": "^4.1.2",
     "mongodb": "^6.3.0",
-    "exceljs": "^4.4.0",
-    "fs": "^0.0.1-security",
-    "path": "^0.12.7"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
+    "exceljs": "^4.4.0"
   },
   "engines": {
     "node": ">=14.0.0"

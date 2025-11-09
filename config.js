@@ -13,6 +13,9 @@ const config = {
     usePersistentTempFolder: true, // Use organized temp structure
     tempBaseName: "BRK CNC Management Dashboard", // Organized temp folder name
     userDefinedWorkingFolder: null, // User can override temp location
+    
+    // Test mode temp path (like JSONScanner)
+    testProcessedDataPath: path.join(__dirname, "data", "test_processed_data"), // Test mode temp base path
   },
   storage: {
     type: process.env.STORAGE_TYPE || "auto", // 'auto', 'local', 'mongodb'
