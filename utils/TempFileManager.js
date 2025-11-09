@@ -17,6 +17,12 @@ class TempFileManager {
     // Support user-defined working folder like JSONScanner
     if (config.app.userDefinedWorkingFolder) {
       this.tempBasePath = path.join(config.app.userDefinedWorkingFolder, config.app.tempBaseName || "BRK CNC Management Dashboard");
+    } else if (config.app.testMode && config.app.testProcessedDataPath) {
+      // Use test_processed_data path for test mode (same as JSONScanner)
+      this.tempBasePath = path.join(
+        config.app.testProcessedDataPath,
+        config.app.tempBaseName || "BRK CNC Management Dashboard"
+      );
     } else {
       // Create organized hierarchy: temp/BRK CNC Management Dashboard/AppName/
       this.tempBasePath = path.join(os.tmpdir(), config.app.tempBaseName || "BRK CNC Management Dashboard");
