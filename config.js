@@ -8,12 +8,12 @@ const config = {
     scanIntervalMs: 60000, // 60 seconds - same as json_scanner
     logLevel: "info",
     enableDetailedLogging: true,
-    
+
     // Read-only processing settings (like JSONScanner)
     usePersistentTempFolder: true, // Use organized temp structure
     tempBaseName: "BRK CNC Management Dashboard", // Organized temp folder name
     userDefinedWorkingFolder: null, // User can override temp location
-    
+
     // Test mode temp path (like JSONScanner)
     testProcessedDataPath: path.join(__dirname, "data", "test_processed_data"), // Test mode temp base path
   },
@@ -58,10 +58,10 @@ const config = {
   paths: {
     test: {
       // Read-only test case folders (DO NOT MODIFY)
-      testDataPath: path.join(__dirname, "test_data"),
+      testDataPath: path.join(__dirname, "data", "test_source_data"),
 
       // Sample Excel files for development - to identify monitored tools
-      sampleExcelPath: path.join(__dirname, "test_data", "testExcel"),
+      sampleExcelPath: path.join(__dirname, "data", "test_source_data", "testExcel"),
 
       // Working directories for actual processing during testing
       filesToProcess: path.join(__dirname, "working_data", "filesToProcess"),
@@ -85,17 +85,18 @@ const config = {
         "..",
         "JSONScanner",
         "data",
-        "test_data",
+        "test_source_data",
         "testPathHumming_auto"
       ),
 
       // Excel files directory (scan for any Excel files here in test mode)
-      excelScanPath: path.join(__dirname, "test_data", "testExcel"),
+      excelScanPath: path.join(__dirname, "data", "test_source_data", "testExcel"),
 
-      // Configuration files (schedule file can be in test_data if needed)
+      // Configuration files (schedule file can be in test_source_data if needed)
       scheduleFile: path.join(
         __dirname,
-        "test_data",
+        "data",
+        "test_source_data",
         "schedules",
         "production_schedule.json"
       ),

@@ -73,11 +73,11 @@ function parseArguments() {
 }
 
 async function runSetup() {
-  const fs = require('fs');
-  const path = require('path');
-  
+  const fs = require("fs");
+  const path = require("path");
+
   console.log("🔧 Setting up ToolManager directories...");
-  
+
   const createDirectory = (dirPath, description) => {
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true });
@@ -89,18 +89,29 @@ async function runSetup() {
 
   try {
     // Create test processed data directory
-    createDirectory(config.app.testProcessedDataPath, "Test processed data directory");
-    
+    createDirectory(
+      config.app.testProcessedDataPath,
+      "Test processed data directory"
+    );
+
     // Create working directories for test mode
     if (config.app.testMode) {
-      createDirectory(config.paths.test.filesToProcess, "Test files to process");
-      createDirectory(config.paths.test.filesProcessed, "Test processed files archive");
+      createDirectory(
+        config.paths.test.filesToProcess,
+        "Test files to process"
+      );
+      createDirectory(
+        config.paths.test.filesProcessed,
+        "Test processed files archive"
+      );
       createDirectory(config.paths.test.workTracking, "Test work tracking");
       createDirectory(config.paths.test.analysis, "Test analysis output");
     }
-    
+
     console.log("✅ Setup completed successfully");
-    console.log(`📁 Test mode: ${config.app.testMode ? 'ENABLED' : 'DISABLED'}`);
+    console.log(
+      `📁 Test mode: ${config.app.testMode ? "ENABLED" : "DISABLED"}`
+    );
     console.log(`📁 Temp processing: ${config.app.testProcessedDataPath}`);
   } catch (error) {
     console.error("❌ Setup failed:", error.message);
@@ -109,16 +120,16 @@ async function runSetup() {
 }
 
 function cleanDemoWorkingFolder() {
-  const fs = require('fs');
-  const path = require('path');
-  
+  const fs = require("fs");
+  const path = require("path");
+
   try {
     const demoPath = config.app.testProcessedDataPath;
-    const brkPath = path.join(demoPath, 'BRK CNC Management Dashboard');
-    
+    const brkPath = path.join(demoPath, "BRK CNC Management Dashboard");
+
     if (fs.existsSync(brkPath)) {
-      console.log('🧹 Cleaning demo working folder...');
-      
+      console.log("🧹 Cleaning demo working folder...");
+
       // Remove contents but preserve folder structure
       const removeContents = (dirPath) => {
         if (fs.existsSync(dirPath)) {
@@ -139,14 +150,14 @@ function cleanDemoWorkingFolder() {
           }
         }
       };
-      
+
       removeContents(brkPath);
-      console.log('✅ Demo working folder cleaned successfully');
+      console.log("✅ Demo working folder cleaned successfully");
     } else {
-      console.log('ℹ️  Demo working folder already clean');
+      console.log("ℹ️  Demo working folder already clean");
     }
   } catch (error) {
-    console.log('⚠️  Could not clean demo working folder:', error.message);
+    console.log("⚠️  Could not clean demo working folder:", error.message);
   }
 }
 
@@ -249,15 +260,17 @@ async function main() {
 
     if (options.demo) {
       console.log("🎯 Running ToolManager temp processing demonstration...");
-      console.log("📁 All processing will use organized temp structure (read-only by design)");
-      
+      console.log(
+        "📁 All processing will use organized temp structure (read-only by design)"
+      );
+
       // Clean previous demo data
       cleanDemoWorkingFolder();
-      
+
       // Load the demo functionality from archived demo file
       const demoModule = require("./archive/demo-temp-organized");
       await demoModule.runDemo();
-      
+
       // Clean up after demo
       cleanDemoWorkingFolder();
       console.log("✅ Demo completed successfully");
@@ -288,11 +301,13 @@ async function main() {
     if (options.forceReprocess) {
       config.processing.preventReprocessing = false;
     }
-    
+
     // Apply working folder override if provided
     if (options.workingFolder) {
       config.app.userDefinedWorkingFolder = options.workingFolder;
-      console.log(`📁 Using user-defined working folder: ${options.workingFolder}`);
+      console.log(
+        `📁 Using user-defined working folder: ${options.workingFolder}`
+      );
     }
 
     // Create and initialize DataManager
