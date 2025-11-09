@@ -9,7 +9,9 @@
     "manual": "node main.js --manual",
     "setup": "node main.js --setup",
     "cleanup": "node main.js --cleanup",
-    "demo": "node main.js --demo-temp",
+    "test": "node main.js --test",
+    "debug": "node main.js --debug",
+    "test-storage": "node main.js --test-storage",
     "list-results": "node main.js --list-results",
     "export-results": "node main.js --export-results"
   },

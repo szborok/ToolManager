@@ -33,10 +33,22 @@ class Scanner {
 
   /**
    * Stop scanning after the current cycle.
+   * In test mode, preserve temp data for inspection.
    */
   stop() {
     this.running = false;
     Logger.warn("Scanner stopped after finishing current project.");
+
+    // In test mode, don't clean up temp data (like JSONScanner)
+    if (config.app.testMode) {
+      Logger.info("🧪 Test mode: Preserving temp data for inspection");
+      // Don't call tempManager cleanup methods
+    } else {
+      // Production mode can clean up
+      if (this.tempManager && typeof this.tempManager.cleanup === "function") {
+        this.tempManager.cleanup();
+      }
+    }
   }
 
   /**
@@ -101,9 +113,13 @@ class Scanner {
       await this.generateConsolidatedReport(excelData, processedData);
       Logger.info(`📄 Generated consolidated report`);
 
-      // Step 8: Clean temp folder
-      await this.cleanTempFolder();
-      Logger.info(`🧹 Cleaned temp folder`);
+      // Step 8: Clean temp folder (only in production mode)
+      if (!config.app.testMode) {
+        await this.cleanTempFolder();
+        Logger.info(`🧹 Cleaned temp folder`);
+      } else {
+        Logger.info(`🧪 Test mode: Preserving temp data for inspection`);
+      }
 
       Logger.info(
         `Successfully processed ${allJsonFiles.length} JSON file(s) for tool usage analysis.`
@@ -111,11 +127,17 @@ class Scanner {
       return processedData;
     } catch (err) {
       Logger.error(`Scanner failed: ${err.message}`);
-      // Always clean temp folder even on error
-      try {
-        await this.cleanTempFolder();
-      } catch (cleanupErr) {
-        Logger.error(`Failed to cleanup temp folder: ${cleanupErr.message}`);
+      // Clean temp folder on error (only in production mode)
+      if (!config.app.testMode) {
+        try {
+          await this.cleanTempFolder();
+        } catch (cleanupErr) {
+          Logger.error(`Failed to cleanup temp folder: ${cleanupErr.message}`);
+        }
+      } else {
+        Logger.info(
+          `🧪 Test mode: Preserving temp data despite error for inspection`
+        );
       }
       return [];
     }
@@ -502,6 +524,12 @@ class Scanner {
    * Step 8: Clean temp folder using organized structure
    */
   async cleanTempFolder() {
+    // Safety check: don't clean in test mode
+    if (config.app.testMode) {
+      Logger.warn(`🚫 Cleanup blocked in test mode - temp data preserved`);
+      return;
+    }
+
     await this.tempManager.cleanup();
     Logger.info(`🧹 Cleaned organized temp session`);
   }

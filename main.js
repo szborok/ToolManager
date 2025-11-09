@@ -15,9 +15,14 @@ function parseArguments() {
     cleanupStats: false,
     setup: false,
     workingFolder: null,
-    demo: false,
+    test: false,
+    testRuns: 1,
+    testQuick: false,
+    testStorage: false,
     listResults: false,
     exportResults: null,
+    // Debug and test flags
+    debug: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -52,8 +57,21 @@ function parseArguments() {
         options.workingFolder = args[i + 1];
         i++; // Skip next argument
         break;
-      case "--demo-temp":
-        options.demo = true;
+      case "--test":
+        options.test = true;
+        // Check if next argument is a number for multiple runs
+        if (
+          i + 1 < args.length &&
+          args[i + 1].startsWith("--") &&
+          args[i + 1].length > 2
+        ) {
+          const numStr = args[i + 1].substring(2);
+          const numRuns = parseInt(numStr, 10);
+          if (!isNaN(numRuns) && numRuns > 0) {
+            options.testRuns = numRuns;
+            i++; // Skip the number argument
+          }
+        }
         break;
       case "--list-results":
         options.listResults = true;
@@ -61,6 +79,15 @@ function parseArguments() {
       case "--export-results":
         options.exportResults = args[i + 1];
         i++; // Skip next argument
+        break;
+      case "--debug":
+        options.debug = true;
+        break;
+      case "--test-quick":
+        options.testQuick = true;
+        break;
+      case "--test-storage":
+        options.testStorage = true;
         break;
       case "--help":
         showHelp();
@@ -70,6 +97,138 @@ function parseArguments() {
   }
 
   return options;
+}
+
+// List temp results
+async function listTempResults() {
+  const fs = require("fs");
+  const path = require("path");
+
+  try {
+    const tempBasePath = path.join(
+      config.app.testProcessedDataPath,
+      "BRK CNC Management Dashboard",
+      "ToolManager"
+    );
+
+    if (!fs.existsSync(tempBasePath)) {
+      console.log("📋 No temp results found");
+      return;
+    }
+
+    console.log(`📋 ToolManager Temp Results:`);
+    console.log(`📁 Base Location: ${tempBasePath}`);
+    console.log("");
+
+    // Check all subdirectories for result files
+    const subdirs = [
+      "results",
+      "input_files",
+      "processed_files",
+      "excel_files",
+    ];
+    let totalFiles = 0;
+
+    for (const subdir of subdirs) {
+      const dirPath = path.join(tempBasePath, subdir);
+      if (fs.existsSync(dirPath)) {
+        const files = fs
+          .readdirSync(dirPath)
+          .filter((f) => f.endsWith(".json"));
+        if (files.length > 0) {
+          console.log(`� ${subdir}/ (${files.length} files):`);
+          for (const file of files) {
+            const filePath = path.join(dirPath, file);
+            const stats = fs.statSync(filePath);
+            console.log(
+              `     - ${file} (${
+                stats.size
+              } bytes, ${stats.mtime.toLocaleString()})`
+            );
+            totalFiles++;
+          }
+        }
+      }
+    }
+
+    if (totalFiles === 0) {
+      console.log(`📄 No result files found in any subdirectories`);
+    } else {
+      console.log(`\n� Total: ${totalFiles} result files found`);
+    }
+  } catch (error) {
+    console.error(`❌ Failed to list temp results: ${error.message}`);
+  }
+}
+
+// Export temp results
+async function exportTempResults(destinationDir) {
+  const fs = require("fs");
+  const path = require("path");
+
+  try {
+    const tempBasePath = path.join(
+      config.app.testProcessedDataPath,
+      "BRK CNC Management Dashboard",
+      "ToolManager"
+    );
+
+    if (!fs.existsSync(tempBasePath)) {
+      console.log("📋 No temp results to export");
+      return;
+    }
+
+    // Create destination directory
+    if (!fs.existsSync(destinationDir)) {
+      fs.mkdirSync(destinationDir, { recursive: true });
+    }
+
+    // Check all subdirectories for result files
+    const subdirs = [
+      "results",
+      "input_files",
+      "processed_files",
+      "excel_files",
+    ];
+    let totalExported = 0;
+
+    for (const subdir of subdirs) {
+      const dirPath = path.join(tempBasePath, subdir);
+      if (fs.existsSync(dirPath)) {
+        const jsonFiles = fs
+          .readdirSync(dirPath)
+          .filter((f) => f.endsWith(".json"));
+        if (jsonFiles.length > 0) {
+          // Create subdirectory in destination
+          const destSubdir = path.join(destinationDir, subdir);
+          if (!fs.existsSync(destSubdir)) {
+            fs.mkdirSync(destSubdir, { recursive: true });
+          }
+
+          console.log(
+            `📁 Exporting ${jsonFiles.length} files from ${subdir}/...`
+          );
+          for (const file of jsonFiles) {
+            const sourcePath = path.join(dirPath, file);
+            const destPath = path.join(destSubdir, file);
+            fs.copyFileSync(sourcePath, destPath);
+            totalExported++;
+            console.log(`   ✅ ${file}`);
+          }
+        }
+      }
+    }
+
+    if (totalExported > 0) {
+      console.log(
+        `📤 Successfully exported ${totalExported} files to: ${destinationDir}`
+      );
+    } else {
+      console.log("📋 No result files found to export");
+    }
+  } catch (error) {
+    console.error(`❌ Failed to export temp results: ${error.message}`);
+  }
 }
 
 async function runSetup() {
@@ -94,19 +253,8 @@ async function runSetup() {
       "Test processed data directory"
     );
 
-    // Create working directories for test mode
-    if (config.app.testMode) {
-      createDirectory(
-        config.paths.test.filesToProcess,
-        "Test files to process"
-      );
-      createDirectory(
-        config.paths.test.filesProcessed,
-        "Test processed files archive"
-      );
-      createDirectory(config.paths.test.workTracking, "Test work tracking");
-      createDirectory(config.paths.test.analysis, "Test analysis output");
-    }
+    // Note: All actual processing happens in BRK temp structure
+    // No need to create working_data directories - they're legacy/unused
 
     console.log("✅ Setup completed successfully");
     console.log(
@@ -119,101 +267,50 @@ async function runSetup() {
   }
 }
 
-function cleanDemoWorkingFolder() {
-  const fs = require("fs");
-  const path = require("path");
-
-  try {
-    const demoPath = config.app.testProcessedDataPath;
-    const brkPath = path.join(demoPath, "BRK CNC Management Dashboard");
-
-    if (fs.existsSync(brkPath)) {
-      console.log("🧹 Cleaning demo working folder...");
-
-      // Remove contents but preserve folder structure
-      const removeContents = (dirPath) => {
-        if (fs.existsSync(dirPath)) {
-          const items = fs.readdirSync(dirPath);
-          for (const item of items) {
-            const itemPath = path.join(dirPath, item);
-            const stat = fs.statSync(itemPath);
-            if (stat.isDirectory()) {
-              removeContents(itemPath); // Recursive
-              try {
-                fs.rmdirSync(itemPath);
-              } catch (e) {
-                // Directory not empty, that's ok
-              }
-            } else {
-              fs.unlinkSync(itemPath);
-            }
-          }
-        }
-      };
-
-      removeContents(brkPath);
-      console.log("✅ Demo working folder cleaned successfully");
-    } else {
-      console.log("ℹ️  Demo working folder already clean");
-    }
-  } catch (error) {
-    console.log("⚠️  Could not clean demo working folder:", error.message);
-  }
-}
-
 function showHelp() {
   console.log(`
-ToolManager Application
+📊 ToolManager - CNC Tool Inventory Management System
 
-Usage: node main.js [options]
+Usage:
+  node main.js [command] [options]
 
-Options:
-  --mode <auto|manual> Override config mode setting
-  --manual             Set mode to manual (shortcut for --mode manual)
-  --auto               Set mode to auto (shortcut for --mode auto)
-  --cleanup            Delete all generated files and work tracking items
-  --cleanup-stats      Show statistics about generated files without deleting
-  --project <path>     Process specific Excel file path (manual mode only)
-  --force              Force reprocess even if result files exist
-  --setup              Run setup and configuration verification
-  --working-folder <path> Override temp directory with user-defined working folder
-  --demo-temp          Run temp processing demonstration (read-only by design)
-  --list-results       List all result files in current temp session
-  --export-results <dir> Export current temp results to specified directory
-  --help               Show this help message
-
-Test Mode Information:
-  Test mode is currently ${
-    config.app.testMode ? "ENABLED" : "DISABLED"
-  } (configured in config.js)
-  
-  AUTO mode paths:
-    - Test mode: ${config.paths.test.filesToProcess}
-    - Production mode: ${config.paths.production.filesToProcess}
-  
-  MANUAL mode paths:
-    - Test mode: Uses ${config.paths.test.filesToProcess}
-    - Production mode: Uses ${config.paths.production.filesToProcess}
-
-Purpose:
-  ToolManager processes Excel matrix files to:
-  - Identify and categorize CNC tools (ECUT, MFC, XF, XFEED)
-  - Generate work tracking JSON files for upcoming tool needs
-  - Compare tool requirements against available inventory
-  - Support manufacturing planning and tool management
-
-Read-Only Operation:
-  ✅ Original files are NEVER modified
-  ✅ All processing uses organized temp structure
-  ✅ Results saved to temp/BRK CNC Management Dashboard/ToolManager/
-  ✅ Use --working-folder to specify custom temp location
+Commands:
+  --auto               Continuous scanning mode (60s intervals)
+  --manual --project   Process specific Excel file
+  --test              Single test run with data preservation
+  --test --N          Multiple test runs (e.g., --test --3)
+  --setup             Initial configuration and verification
+  --cleanup           Remove all generated BRK files
+  --cleanup-stats     Show cleanup statistics without deletion
+  --list-results      List current temp result files
+  --export-results    Export temp results to directory
+  --working-folder    Use custom working directory
 
 Examples:
+  node main.js --auto
   node main.js --manual --project "path/to/matrix.xlsx"
-  node main.js --auto --force
-  node main.js --cleanup (removes all generated files)
-  node main.js --setup (run initial setup)
-  node main.js --working-folder "D:/CNC_Processing" (custom temp location)
+  node main.js --test
+  node main.js --test --5
+  node main.js --setup
+  node main.js --cleanup-stats
+  node main.js --list-results
+  node main.js --export-results "/path/to/export"
+  node main.js --working-folder "D:/Custom_Processing"
+  node main.js --debug
+  node main.js --test-quick
+  node main.js --test-storage
+
+Development & Testing:
+  --debug              Debug utilities and log viewing
+  --test               Run single test with cleanup (clean working folder after)
+  --test --N           Run N test cycles with no cleanup between runs (e.g., --test --3)
+  --test-quick         Run quick storage tests
+  --test-storage       Run detailed storage functionality tests
+
+Data Safety:
+  • All processing uses organized temp structure
+  • Original files are never modified
+  • Test mode preserves data for analysis
   `);
 }
 
@@ -258,36 +355,47 @@ async function main() {
       process.exit(0);
     }
 
-    if (options.demo) {
-      console.log("🎯 Running ToolManager temp processing demonstration...");
-      console.log(
-        "📁 All processing will use organized temp structure (read-only by design)"
-      );
+    // Handle debug and test modes
+    if (options.debug) {
+      console.log("🐛 Starting debug utilities...");
+      await runDebugUtilities();
+      process.exit(0);
+    }
 
-      // Clean previous demo data
-      cleanDemoWorkingFolder();
+    if (options.testQuick) {
+      console.log("⚡ Running quick tests...");
+      await runTestQuick();
+      process.exit(0);
+    }
 
-      // Load the demo functionality from archived demo file
-      const demoModule = require("./archive/demo-temp-organized");
-      await demoModule.runDemo();
+    if (options.testStorage) {
+      console.log("🗄️  Running storage tests...");
+      await runTestStorage();
+      process.exit(0);
+    }
 
-      // Clean up after demo
-      cleanDemoWorkingFolder();
-      console.log("✅ Demo completed successfully");
+    if (options.test) {
+      if (options.testRuns === 1) {
+        console.log("🧪 Running single test with data preservation...");
+        await runTest();
+      } else {
+        console.log(
+          `🧪 Running ${options.testRuns} test cycles (no cleanup between runs)...`
+        );
+        await runMultipleTests(options.testRuns);
+      }
       process.exit(0);
     }
 
     if (options.listResults) {
       console.log("📋 Listing current temp session results...");
-      // TODO: Implement result listing functionality
-      console.log("ℹ️  Result listing not yet implemented");
+      await listTempResults();
       process.exit(0);
     }
 
     if (options.exportResults) {
       console.log(`📤 Exporting temp results to: ${options.exportResults}`);
-      // TODO: Implement result export functionality
-      console.log("ℹ️  Result export not yet implemented");
+      await exportTempResults(options.exportResults);
       process.exit(0);
     }
 
@@ -322,6 +430,283 @@ async function main() {
     Logger.error(`Application failed: ${err.message}`);
     console.error(`❌ Application failed: ${err.message}`);
     process.exit(1);
+  }
+}
+
+async function runTest() {
+  const Scanner = require("./src/Scanner");
+  const Executor = require("./src/Executor");
+
+  console.log("🧪 ToolManager Single Test Run");
+  console.log("🗂️  BRK CNC Management Dashboard Structure");
+  console.log("📌 Note: Test data preserved for inspection");
+  console.log("================================================\n");
+
+  let executor = null;
+  let originalAutoMode = null;
+
+  try {
+    // Temporarily disable auto mode for test
+    originalAutoMode = config.app.autoMode;
+    config.app.autoMode = false;
+
+    console.log("📂 Using test data from:", config.getJsonScanPath());
+    console.log("📊 Excel inventory path:", config.getExcelScanPath());
+    console.log("");
+
+    // Create executor
+    const dataManager = new DataManager();
+    await dataManager.initialize();
+    executor = new Executor(dataManager);
+
+    console.log("🔄 Step 1: Scanning Excel and JSON files...");
+
+    // Run one processing cycle
+    await executor.start({ mode: "manual" });
+
+    console.log("✅ Test run completed");
+    console.log(
+      "   📁 BRK CNC Management Dashboard/ToolManager structure maintained"
+    );
+    console.log("   🔄 Data preserved for inspection");
+  } catch (error) {
+    console.error("❌ Test run failed:", error.message);
+  } finally {
+    console.log("\n🔄 Data preserved for future test runs");
+    if (executor) {
+      await executor.stop();
+    }
+
+    // Restore original auto mode setting
+    if (originalAutoMode !== null) {
+      config.app.autoMode = originalAutoMode;
+    }
+
+    console.log("✅ Test run completed (data preserved)");
+  }
+}
+
+async function runMultipleTests(numRuns) {
+  console.log("🧪 ToolManager Multiple Test Runs");
+  console.log("🗂️  BRK CNC Management Dashboard Structure");
+  console.log("📌 Note: No cleanup between runs - data accumulates");
+  console.log("================================================\n");
+
+  let executor = null;
+  let originalAutoMode = null;
+
+  try {
+    // Temporarily disable auto mode for test
+    originalAutoMode = config.app.autoMode;
+    config.app.autoMode = false;
+
+    console.log("📂 Using test data from:", config.getJsonScanPath());
+    console.log("📊 Excel inventory path:", config.getExcelScanPath());
+    console.log("");
+
+    const dataManager = new DataManager();
+    await dataManager.initialize();
+
+    for (let i = 1; i <= numRuns; i++) {
+      console.log(`🔄 Test Run ${i}/${numRuns}: Scanning and processing...`);
+
+      executor = new Executor(dataManager);
+      await executor.start({ mode: "manual" });
+
+      console.log(`✅ Run ${i}: Results saved to temp folder`);
+      if (i < numRuns) {
+        console.log("   🔄 Continuing to next run (no cleanup)...\n");
+      }
+    }
+
+    console.log(`\n📋 All ${numRuns} test runs completed`);
+    console.log(
+      "   📁 BRK CNC Management Dashboard/ToolManager structure maintained"
+    );
+    console.log("   📂 Data accumulated for inspection");
+  } catch (error) {
+    console.error("❌ Multiple test runs failed:", error.message);
+  } finally {
+    console.log("\n🔄 Data preserved for future test runs");
+    if (executor) {
+      await executor.stop();
+    }
+
+    // Restore original auto mode setting
+    if (originalAutoMode !== null) {
+      config.app.autoMode = originalAutoMode;
+    }
+
+    console.log("✅ Test run completed (data preserved)");
+  }
+}
+
+// Debug and test function implementations
+async function runDebugUtilities() {
+  const fs = require("fs");
+  const path = require("path");
+
+  function showLogFiles() {
+    const logsDir = path.join(__dirname, "logs");
+
+    if (!fs.existsSync(logsDir)) {
+      console.log("📁 No logs directory found.");
+      return;
+    }
+
+    const logFiles = fs
+      .readdirSync(logsDir)
+      .filter((file) => file.endsWith(".log"));
+
+    if (logFiles.length === 0) {
+      console.log("📝 No log files found.");
+      return;
+    }
+
+    console.log("📝 Available log files:");
+    logFiles.forEach((file, index) => {
+      const filePath = path.join(logsDir, file);
+      const stats = fs.statSync(filePath);
+      console.log(
+        `  ${index + 1}. ${file} (${Math.round(
+          stats.size / 1024
+        )}KB) - ${stats.mtime.toLocaleString()}`
+      );
+    });
+  }
+
+  function showLatestLogs(lines = 50) {
+    const logsDir = path.join(__dirname, "logs");
+
+    if (!fs.existsSync(logsDir)) {
+      console.log("📝 No logs directory found.");
+      return;
+    }
+
+    const logFiles = fs
+      .readdirSync(logsDir)
+      .filter((file) => file.endsWith(".log"))
+      .sort()
+      .reverse();
+
+    if (logFiles.length === 0) {
+      console.log("📝 No log files found.");
+      return;
+    }
+
+    const latestLogFile = path.join(logsDir, logFiles[0]);
+    const content = fs.readFileSync(latestLogFile, "utf8");
+    const logLines = content.split("\n").filter((line) => line.trim());
+    const recentLines = logLines.slice(-lines);
+
+    console.log(
+      `📝 Latest ${recentLines.length} log entries from ${logFiles[0]}:`
+    );
+    console.log("═".repeat(80));
+    recentLines.forEach((line) => console.log(line));
+  }
+
+  console.log("🐛 ToolManager Debug Utilities");
+  console.log("==============================\n");
+
+  showLogFiles();
+  console.log("");
+  showLatestLogs(20);
+}
+
+async function runTestQuick() {
+  console.log("🚀 Quick Storage Tests for ToolManager\n");
+
+  try {
+    // Test Local Storage
+    process.env.STORAGE_TYPE = "local";
+    const dm1 = new DataManager();
+    await dm1.initialize();
+
+    const testProject = {
+      projectName: "test_local_quick_toolmanager",
+      fileName: "test_matrix.xlsx",
+      status: "active",
+    };
+
+    await dm1.saveProject(testProject);
+    console.log("✅ ToolManager Local Storage: PASSED");
+
+    // Test MongoDB if available
+    try {
+      process.env.STORAGE_TYPE = "mongodb";
+      const dm2 = new DataManager();
+      await dm2.initialize();
+
+      const testProjectMongo = {
+        projectName: "test_mongo_quick_toolmanager",
+        fileName: "test_matrix.xlsx",
+        status: "active",
+      };
+
+      await dm2.saveProject(testProjectMongo);
+      console.log("✅ ToolManager MongoDB: PASSED");
+    } catch (mongoError) {
+      console.log("⚠️  ToolManager MongoDB: SKIPPED (not available)");
+    }
+  } catch (error) {
+    console.error("❌ ToolManager tests failed:", error.message);
+  }
+
+  console.log("\n🎉 Quick tests completed!");
+}
+
+async function runTestStorage() {
+  console.log("🧪 Testing ToolManager with LOCAL storage...");
+
+  try {
+    // Test local storage
+    process.env.STORAGE_TYPE = "local";
+    const dataManager = new DataManager();
+    await dataManager.initialize();
+
+    console.log("✅ Local storage initialized");
+
+    // Test saving a project
+    const testProject = {
+      projectName: "storage_test_toolmanager",
+      fileName: "test_matrix.xlsx",
+      status: "active",
+      timestamp: new Date().toISOString(),
+    };
+
+    await dataManager.saveProject(testProject);
+    console.log("✅ Project saved successfully");
+
+    // Test retrieving projects
+    const projects = await dataManager.getAllProjects();
+    console.log(`✅ Retrieved ${projects.length} project(s)`);
+
+    // Test tool tracking storage
+    const testToolTracking = {
+      projectName: "storage_test_toolmanager",
+      toolName: "Test Tool",
+      quantity: 5,
+      location: "Shelf A-01",
+      timestamp: new Date().toISOString(),
+    };
+
+    await dataManager.saveToolTracking(testToolTracking);
+    console.log("✅ Tool tracking saved successfully");
+
+    // Test scan results storage
+    const testScanResult = {
+      scanPath: "/test/path",
+      excelFileCount: 1,
+      timestamp: new Date().toISOString(),
+    };
+
+    await dataManager.saveScanResult(testScanResult);
+    console.log("✅ Scan result saved successfully");
+
+    console.log("\n🎉 All storage tests passed!");
+  } catch (error) {
+    console.error("❌ Storage test failed:", error.message);
   }
 }
 

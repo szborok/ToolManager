@@ -40,6 +40,16 @@ class Results {
           : []
       );
 
+      // Create dashboard-ready format
+      const dashboardData = {
+        tools: this.createDashboardToolsList(
+          toolsUsedList,
+          matrixToolCodes,
+          usedTools
+        ),
+      };
+
+      // Legacy format for backward compatibility
       const reportData = {
         reportInfo: {
           generatedAt: new Date().toISOString(),
@@ -71,23 +81,25 @@ class Results {
 
       // Always use organized temp structure - no fallback to project root
       if (!this.tempManager) {
-        throw new Error("TempManager is required for read-only processing. No files will be written to original directories.");
+        throw new Error(
+          "TempManager is required for read-only processing. No files will be written to original directories."
+        );
       }
 
-      // Save to organized temp structure
+      // Save dashboard format to organized temp structure
       reportFilePath = await this.tempManager.saveToTemp(
         reportFileName,
-        JSON.stringify(reportData, null, 2),
+        JSON.stringify(dashboardData, null, 2),
         "results"
       );
       Logger.info(
-        `✅ Simplified report saved to organized temp: results/${reportFileName}`
+        `✅ Dashboard-ready report saved to organized temp: results/${reportFileName}`
       );
 
       // Also save to storage adapter if available
-      await this.saveToStorage(reportData);
+      await this.saveToStorage(dashboardData);
 
-      return reportData;
+      return dashboardData;
     } catch (err) {
       Logger.error(`Failed to generate simplified report: ${err.message}`);
       throw err;
@@ -273,6 +285,35 @@ class Results {
     nonMatrixTools.sort((a, b) => b.totalUsageTime - a.totalUsageTime);
 
     return nonMatrixTools;
+  }
+
+  /**
+   * Create dashboard-ready tools list
+   * Converts tool data to match dashboard expectations:
+   * { tools: [{ id, name, status, isMatrix }] }
+   */
+  createDashboardToolsList(toolsUsedList, matrixToolCodes, usedMatrixTools) {
+    const tools = [];
+
+    // Add all used tools with dashboard-compatible fields
+    for (const usedTool of toolsUsedList) {
+      const isMatrix = matrixToolCodes.has(usedTool.toolName);
+
+      tools.push({
+        id: usedTool.toolName, // Required by dashboard
+        name: usedTool.toolName, // Required by dashboard
+        status: "in_use", // Required by dashboard (currently being used)
+        isMatrix: isMatrix, // Boolean for matrix/non-matrix filtering
+        usageTime: usedTool.totalUsageTime,
+        usageCount: usedTool.usageCount,
+        projectCount: usedTool.projectCount,
+      });
+    }
+
+    // Sort by usage time (most used first)
+    tools.sort((a, b) => b.usageTime - a.usageTime);
+
+    return tools;
   }
 
   /**
@@ -614,19 +655,23 @@ class Results {
 
       // Save to organized temp structure only - no original directory writes
       if (!this.tempManager) {
-        throw new Error("TempManager is required for read-only processing. No files will be written to original directories.");
+        throw new Error(
+          "TempManager is required for read-only processing. No files will be written to original directories."
+        );
       }
 
       const timestamp = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
       const reportFileName = `ToolManager_Report_${timestamp}.json`;
-      
+
       // Save to temp structure
       const reportFilePath = await this.tempManager.saveToTemp(
         reportFileName,
         JSON.stringify(reportData, null, 2),
         "results"
       );
-      Logger.info(`✓ Consolidated report saved to temp: results/${reportFileName}`);
+      Logger.info(
+        `✓ Consolidated report saved to temp: results/${reportFileName}`
+      );
 
       // Also save a "latest" version for easy access in temp
       const latestReportFileName = "ToolManager_Latest_Report.json";

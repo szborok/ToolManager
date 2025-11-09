@@ -68,21 +68,7 @@ const config = {
         "testExcel"
       ),
 
-      // Working directories for actual processing during testing
-      filesToProcess: path.join(__dirname, "working_data", "filesToProcess"),
-      filesProcessed: path.join(
-        __dirname,
-        "working_data",
-        "filesProcessedArchive"
-      ),
-      workTracking: path.join(
-        __dirname,
-        "working_data",
-        "data",
-        "workTracking"
-      ),
-      archive: path.join(__dirname, "working_data", "data", "archive"),
-      analysis: path.join(__dirname, "working_data", "analysis"),
+      // All processing happens in BRK temp structure - no separate working directories needed
 
       // JSON files from CNC machines (local test data)
       jsonScanPath: path.join(
@@ -110,19 +96,14 @@ const config = {
       ),
     },
     production: {
-      // Production Excel file processing directory
-      filesToProcess: "C:\\Production\\EmailAttachments",
-      filesProcessed: "C:\\Production\\ProcessedFiles",
-      workTracking: "C:\\Production\\WorkTracking",
-      archive: "C:\\Production\\Archive",
-      analysis: "C:\\Production\\Analysis",
-
       // Excel files directory (scan for Excel files in production)
       excelScanPath: "C:\\Production\\Matrix",
 
       // JSON files from CNC machines (production path - root of JSON nest)
       jsonScanPath: "C:\\Production\\CNC_Data",
       scheduleFile: "C:\\Production\\Schedules\\production_schedule.json",
+
+      // All processing happens in BRK temp structure: C:/Production/BRK CNC Management Dashboard/ToolManager/
     },
   },
 };

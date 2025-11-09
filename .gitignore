@@ -64,10 +64,8 @@ filesToProcess/*.json
 dist/
 build/
 
-# ToolManager specific temp files
-working_data/filesToProcess/*.xlsx
-working_data/filesToProcess/*.json
-working_data/resultsArchive/
+# ToolManager specific temp files (LEGACY - working_data no longer used)
+working_data/
 temp/
 
 # Generated work tracking files

@@ -16,7 +16,10 @@ class TempFileManager {
   constructor(appName = "ToolManager") {
     // Support user-defined working folder like JSONScanner
     if (config.app.userDefinedWorkingFolder) {
-      this.tempBasePath = path.join(config.app.userDefinedWorkingFolder, config.app.tempBaseName || "BRK CNC Management Dashboard");
+      this.tempBasePath = path.join(
+        config.app.userDefinedWorkingFolder,
+        config.app.tempBaseName || "BRK CNC Management Dashboard"
+      );
     } else if (config.app.testMode && config.app.testProcessedDataPath) {
       // Use test_processed_data path for test mode (same as JSONScanner)
       this.tempBasePath = path.join(
@@ -25,24 +28,27 @@ class TempFileManager {
       );
     } else {
       // Create organized hierarchy: temp/BRK CNC Management Dashboard/AppName/
-      this.tempBasePath = path.join(os.tmpdir(), config.app.tempBaseName || "BRK CNC Management Dashboard");
+      this.tempBasePath = path.join(
+        os.tmpdir(),
+        config.app.tempBaseName || "BRK CNC Management Dashboard"
+      );
     }
-    
+
     this.appName = appName;
     this.appPath = path.join(this.tempBasePath, this.appName);
-    
+
     if (config.app.usePersistentTempFolder) {
-      this.sessionPath = path.join(this.appPath, "persistent");
+      this.sessionPath = this.appPath; // Work directly in app folder
     } else {
       this.sessionId = this.generateSessionId();
       this.sessionPath = path.join(this.appPath, this.sessionId);
     }
 
     // Create organized subdirectories for different types of files
-    this.inputFilesPath = path.join(this.sessionPath, "input_files");
+    this.inputFilesPath = path.join(this.sessionPath, "input_json_files");
     this.processedFilesPath = path.join(this.sessionPath, "processed_files");
     this.resultsPath = path.join(this.sessionPath, "results");
-    this.excelFilesPath = path.join(this.sessionPath, "excel_files");
+    this.excelFilesPath = path.join(this.sessionPath, "input_excel_files");
 
     this.fileHashes = new Map(); // Track file hashes for change detection
     this.copyQueue = new Map(); // Track copy operations
@@ -88,10 +94,10 @@ class TempFileManager {
 
       // Create organized subdirectories
       const subdirs = [
-        { path: this.inputFilesPath, name: "input_files" },
+        { path: this.inputFilesPath, name: "input_json_files" },
         { path: this.processedFilesPath, name: "processed_files" },
         { path: this.resultsPath, name: "results" },
-        { path: this.excelFilesPath, name: "excel_files" },
+        { path: this.excelFilesPath, name: "input_excel_files" },
       ];
 
       for (const subdir of subdirs) {
@@ -109,7 +115,7 @@ class TempFileManager {
   /**
    * Copy a file or directory structure to temp location
    * @param {string} sourcePath - Original file/directory path
-   * @param {string} fileType - Type of file: 'input', 'processed', 'result', 'excel'
+   * @param {string} fileType - Type of file: 'input', 'input_files', 'processed', 'processed_files', 'result', 'results', 'excel', 'excel_files'
    * @param {boolean} preserveStructure - Whether to preserve directory structure
    * @returns {string} - Path to temporary copy
    */
@@ -117,23 +123,8 @@ class TempFileManager {
     try {
       const sourceStats = fs.statSync(sourcePath);
 
-      // Determine target directory based on file type
-      let targetBasePath;
-      switch (fileType) {
-        case "processed":
-          targetBasePath = this.processedFilesPath;
-          break;
-        case "result":
-          targetBasePath = this.resultsPath;
-          break;
-        case "excel":
-          targetBasePath = this.excelFilesPath;
-          break;
-        case "input":
-        default:
-          targetBasePath = this.inputFilesPath;
-          break;
-      }
+      // Determine target directory based on file type (use getPathForType for consistency)
+      const targetBasePath = this.getPathForType(fileType);
 
       const relativePath = this.getRelativePath(sourcePath);
       const tempPath = path.join(targetBasePath, relativePath);
@@ -222,18 +213,22 @@ class TempFileManager {
 
   /**
    * Get path for specific file type
-   * @param {string} fileType - Type: 'input', 'processed', 'result', 'excel'
+   * @param {string} fileType - Type: 'input', 'processed', 'processed_files', 'result', 'results', 'excel', 'excel_files'
    * @returns {string} - Directory path for the file type
    */
   getPathForType(fileType) {
     switch (fileType) {
       case "processed":
+      case "processed_files":
         return this.processedFilesPath;
       case "result":
+      case "results":
         return this.resultsPath;
       case "excel":
+      case "excel_files":
         return this.excelFilesPath;
       case "input":
+      case "input_files":
       default:
         return this.inputFilesPath;
     }
