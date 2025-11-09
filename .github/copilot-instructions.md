@@ -13,7 +13,7 @@ ToolManager is a Node.js-based CNC tool tracking system that processes Excel inv
 - **Matrix** (`src/Matrix.js`) - Handles Excel file parsing with ECUT/MFC/XF/XFEED tool categorization
 - **ToolFactory** (`src/ToolFactory.js`) - Creates and manages tool objects with inventory tracking
 - **Results** (`src/Results.js`) - Generates work tracking JSON files and analysis reports
-- **DataManager** (`src/DataManager.js`) - Wraps StorageAdapter for JSON/MongoDB persistence
+- **DataManager** (`src/DataManager.js`) - Manages local JSON file persistence
 - **TempFileManager** (`utils/TempFileManager.js`) - Manages organized temp structure with read-only processing
 
 ### Data Flow Pattern
@@ -82,9 +82,9 @@ Matrix files contain tool requirements parsed into categories:
 // All processing in temp - NO original file modification
 ```
 
-## Storage Abstraction
+## Storage
 
-DataManager supports both local JSON files and MongoDB via StorageAdapter. Unlike JSONScanner, ToolManager has `retentionPolicy.cleanupOldData: false` to preserve tool tracking history.
+All data is stored in local JSON files within the organized temp structure. ToolManager uses TempFileManager for read-only processing.
 
 ## Key File Paths
 

@@ -76,6 +76,9 @@ temp/
 # Read-only processing temp folders
 BRK_CNC_Management_Dashboard/
 "BRK CNC Management Dashboard"/
+
+# Test data (now in centralized CNC_TestData repository)
+data/test_source_data/
 data/test_processed_data/
 
 # Session and tracking files

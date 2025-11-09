@@ -62,6 +62,11 @@ class Results {
               : 0,
             matrixToolsUsed: usedTools.length,
             nonMatrixToolsUsed: toolsUsedList.length - usedTools.length,
+            totalMatrixTools:
+              excelData && excelData.toolInventory
+                ? excelData.toolInventory.length
+                : 0,
+            unusedMatrixTools: unusedTools.length,
           },
         },
 
@@ -73,6 +78,12 @@ class Results {
           toolsUsedList,
           matrixToolCodes
         ),
+
+        // Section 3: All Matrix Tools (complete Excel inventory - for "Currently Available" view)
+        allMatrixTools: this.createAllMatrixToolsList(excelData),
+
+        // Section 4: Unused Matrix Tools (in Excel but NOT in JSON - for "Remaining Tools" view)
+        unusedMatrixTools: this.createUnusedMatrixToolsList(unusedTools),
       };
 
       // Save simplified report using organized temp structure
@@ -285,6 +296,69 @@ class Results {
     nonMatrixTools.sort((a, b) => b.totalUsageTime - a.totalUsageTime);
 
     return nonMatrixTools;
+  }
+
+  /**
+   * Create all matrix tools list (complete Excel inventory - for "Currently Available" view)
+   */
+  createAllMatrixToolsList(excelData) {
+    if (
+      !excelData ||
+      !excelData.toolInventory ||
+      excelData.toolInventory.length === 0
+    ) {
+      return [];
+    }
+
+    const allMatrixTools = excelData.toolInventory.map((tool) => {
+      const quantity = parseFloat(tool.quantity || 0);
+      const toolLifeMinutes = this.getToolLifeMinutes(
+        tool.toolCode || tool.code,
+        tool.description
+      );
+      const totalCapacity = quantity * toolLifeMinutes;
+
+      return {
+        toolCode: tool.toolCode || tool.code || "UNKNOWN",
+        description: tool.description || "",
+        quantity: quantity,
+        toolLifePerPiece: toolLifeMinutes,
+        totalCapacityMinutes: Math.round(totalCapacity * 100) / 100,
+        status: "AVAILABLE",
+      };
+    });
+
+    // Sort by total capacity (descending)
+    allMatrixTools.sort(
+      (a, b) => b.totalCapacityMinutes - a.totalCapacityMinutes
+    );
+
+    return allMatrixTools;
+  }
+
+  /**
+   * Create unused matrix tools list (in Excel but NOT in JSON - for "Remaining Tools" view)
+   */
+  createUnusedMatrixToolsList(unusedTools) {
+    if (!unusedTools || unusedTools.length === 0) {
+      return [];
+    }
+
+    const unusedMatrixTools = unusedTools.map((tool) => ({
+      toolCode: tool.toolCode,
+      description: tool.description,
+      quantity: tool.quantity,
+      toolLifePerPiece: tool.toolLifePerPiece,
+      totalCapacityMinutes: tool.totalCapacityMinutes,
+      status: "UNUSED",
+    }));
+
+    // Sort by total capacity (descending)
+    unusedMatrixTools.sort(
+      (a, b) => b.totalCapacityMinutes - a.totalCapacityMinutes
+    );
+
+    return unusedMatrixTools;
   }
 
   /**

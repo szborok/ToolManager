@@ -14,8 +14,14 @@ const config = {
     tempBaseName: "BRK CNC Management Dashboard", // Organized temp folder name
     userDefinedWorkingFolder: null, // User can override temp location
 
-    // Test mode temp path (like JSONScanner)
-    testProcessedDataPath: path.join(__dirname, "data", "test_processed_data"), // Test mode temp base path
+    // Test mode temp path - points to centralized CNC_TestData
+    testProcessedDataPath: path.join(
+      __dirname,
+      "..",
+      "CNC_TestData",
+      "working_data",
+      "toolmanager"
+    ), // Test mode temp base path
   },
   storage: {
     type: process.env.STORAGE_TYPE || "auto", // 'auto', 'local', 'mongodb'
@@ -57,40 +63,44 @@ const config = {
   },
   paths: {
     test: {
-      // Read-only test case folders (DO NOT MODIFY)
-      testDataPath: path.join(__dirname, "data", "test_source_data"),
+      // Read-only test case folders (DO NOT MODIFY) - uses centralized CNC_TestData
+      testDataPath: path.join(__dirname, "..", "CNC_TestData", "source_data"),
 
       // Sample Excel files for development - to identify monitored tools
       sampleExcelPath: path.join(
         __dirname,
-        "data",
-        "test_source_data",
-        "testExcel"
+        "..",
+        "CNC_TestData",
+        "source_data",
+        "matrix_excel_files"
       ),
 
       // All processing happens in BRK temp structure - no separate working directories needed
 
-      // JSON files from CNC machines (local test data)
+      // JSON files from CNC machines (from centralized test data)
       jsonScanPath: path.join(
         __dirname,
-        "data",
-        "test_source_data",
-        "testJSON"
+        "..",
+        "CNC_TestData",
+        "source_data",
+        "json_files"
       ),
 
       // Excel files directory (scan for any Excel files here in test mode)
       excelScanPath: path.join(
         __dirname,
-        "data",
-        "test_source_data",
-        "testExcel"
+        "..",
+        "CNC_TestData",
+        "source_data",
+        "matrix_excel_files"
       ),
 
       // Configuration files (schedule file can be in test_source_data if needed)
       scheduleFile: path.join(
         __dirname,
-        "data",
-        "test_source_data",
+        "..",
+        "CNC_TestData",
+        "source_data",
         "schedules",
         "production_schedule.json"
       ),

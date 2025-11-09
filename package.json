@@ -4,6 +4,9 @@
   "description": "CNC ToolManager with organized temp structure for BRK CNC Management Dashboard",
   "main": "main.js",
   "scripts": {
+    "postinstall": "node scripts/setup-test-data.js",
+    "pretest": "node scripts/setup-test-data.js",
+    "setup-test-data": "node scripts/setup-test-data.js",
     "start": "node main.js --auto",
     "auto": "node main.js --auto",
     "manual": "node main.js --manual",
