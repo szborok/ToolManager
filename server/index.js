@@ -1,0 +1,281 @@
+// server/index.js
+/**
+ * ToolManager REST API Server
+ *
+ * Provides RESTful endpoints for CNC tool inventory management and matrix processing.
+ */
+
+const express = require("express");
+const cors = require("cors");
+const config = require("../config");
+const Logger = require("../utils/Logger");
+const DataManager = require("../src/DataManager");
+
+const app = express();
+const PORT = 3002;
+
+// Middleware
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://localhost:3000"],
+    credentials: true,
+  })
+);
+app.use(express.json());
+
+// Request logging
+app.use((req, res, next) => {
+  Logger.info(`${req.method} ${req.path}`, { ip: req.ip });
+  next();
+});
+
+// Initialize DataManager
+let dataManager = null;
+
+async function initializeDataManager() {
+  try {
+    dataManager = new DataManager();
+    await dataManager.initialize();
+    Logger.info("DataManager initialized successfully");
+    return true;
+  } catch (error) {
+    Logger.error("Failed to initialize DataManager", { error: error.message });
+    return false;
+  }
+}
+
+// ===== API ROUTES =====
+
+/**
+ * GET /api/status
+ * Health check and service status
+ */
+app.get("/api/status", (req, res) => {
+  res.json({
+    status: "running",
+    mode: config.app.autoMode ? "auto" : "manual",
+    testMode: config.app.testMode,
+    version: "2.0.0",
+    timestamp: new Date().toISOString(),
+    dataManager: dataManager ? "initialized" : "not initialized",
+  });
+});
+
+/**
+ * GET /api/tools
+ * List all tools in inventory
+ */
+app.get("/api/tools", async (req, res) => {
+  try {
+    const status = req.query.status; // filter by status: in_use|available
+    const isMatrix = req.query.isMatrix; // filter by isMatrix: true|false
+
+    if (!dataManager) {
+      return res.status(503).json({
+        error: {
+          code: "SERVICE_UNAVAILABLE",
+          message: "DataManager not initialized",
+        },
+      });
+    }
+
+    // Build filter object
+    const filter = {};
+    if (status) filter.status = status;
+    if (isMatrix !== undefined) filter.isMatrix = isMatrix === "true";
+
+    // Get real tools from DataManager
+    const tools = await dataManager.getAllTools(filter);
+    const stats = await dataManager.getToolUsageStats();
+
+    res.json({
+      tools,
+      total: tools.length,
+      stats,
+    });
+  } catch (error) {
+    Logger.error("Failed to get tools", { error: error.message });
+    res.status(500).json({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Failed to retrieve tools",
+        details: error.message,
+      },
+    });
+  }
+});
+
+/**
+ * GET /api/tools/:id
+ * Get specific tool details
+ */
+app.get("/api/tools/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!dataManager) {
+      return res.status(503).json({
+        error: {
+          code: "SERVICE_UNAVAILABLE",
+          message: "DataManager not initialized",
+        },
+      });
+    }
+
+    // Get real tool from DataManager
+    const tool = await dataManager.getToolById(id);
+
+    if (!tool) {
+      return res.status(404).json({
+        error: {
+          code: "NOT_FOUND",
+          message: `Tool with ID ${id} not found`,
+        },
+      });
+    }
+
+    res.json(tool);
+  } catch (error) {
+    Logger.error(`Failed to get tool ${req.params.id}`, {
+      error: error.message,
+    });
+    res.status(500).json({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Failed to retrieve tool details",
+        details: error.message,
+      },
+    });
+  }
+});
+
+/**
+ * GET /api/projects
+ * List matrix processing projects
+ */
+app.get("/api/projects", async (req, res) => {
+  try {
+    if (!dataManager) {
+      return res.status(503).json({
+        error: {
+          code: "SERVICE_UNAVAILABLE",
+          message: "DataManager not initialized",
+        },
+      });
+    }
+
+    // Get real projects from DataManager
+    const projects = await dataManager.getProjects();
+
+    res.json({
+      projects,
+      total: projects.length,
+    });
+  } catch (error) {
+    Logger.error("Failed to get projects", { error: error.message });
+    res.status(500).json({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Failed to retrieve projects",
+        details: error.message,
+      },
+    });
+  }
+});
+
+/**
+ * GET /api/analysis/upcoming
+ * Get upcoming tool requirements
+ */
+app.get("/api/analysis/upcoming", async (req, res) => {
+  try {
+    if (!dataManager) {
+      return res.status(503).json({
+        error: {
+          code: "SERVICE_UNAVAILABLE",
+          message: "DataManager not initialized",
+        },
+      });
+    }
+
+    // Get real upcoming analysis from DataManager
+    const upcomingData = await dataManager.getUpcomingTools();
+
+    res.json({
+      ...upcomingData,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    Logger.error("Failed to get upcoming requirements", {
+      error: error.message,
+    });
+    res.status(500).json({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Failed to retrieve upcoming requirements",
+        details: error.message,
+      },
+    });
+  }
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    error: {
+      code: "NOT_FOUND",
+      message: `Route ${req.method} ${req.path} not found`,
+    },
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  Logger.error("Unhandled error", { error: err.message, stack: err.stack });
+  res.status(500).json({
+    error: {
+      code: "INTERNAL_ERROR",
+      message: "Internal server error",
+      details: process.env.NODE_ENV === "development" ? err.message : undefined,
+    },
+  });
+});
+
+// Start server
+async function startServer() {
+  try {
+    Logger.info("Starting ToolManager API Server...");
+
+    const initialized = await initializeDataManager();
+    if (!initialized) {
+      Logger.error(
+        "Failed to initialize DataManager - server will start but data access will be limited"
+      );
+    }
+
+    app.listen(PORT, () => {
+      Logger.info(
+        `🚀 ToolManager API Server running on http://localhost:${PORT}`
+      );
+      console.log(
+        `🚀 ToolManager API Server running on http://localhost:${PORT}`
+      );
+      console.log(`📊 Mode: ${config.app.testMode ? "TEST" : "PRODUCTION"}`);
+      console.log(
+        `🔄 Auto-run: ${config.app.autoMode ? "ENABLED" : "DISABLED"}`
+      );
+      console.log(`📡 API endpoints available at http://localhost:${PORT}/api`);
+    });
+  } catch (error) {
+    Logger.error("Failed to start server", { error: error.message });
+    console.error("❌ Failed to start server:", error.message);
+    process.exit(1);
+  }
+}
+
+// Start if run directly
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { app, startServer };

@@ -3,7 +3,7 @@ const path = require("path");
 
 const config = {
   app: {
-    testMode: true,
+    testMode: false,
     autoMode: true, // Same as json_scanner's autorun
     scanIntervalMs: 60000, // 60 seconds - same as json_scanner
     logLevel: "info",
