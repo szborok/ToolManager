@@ -3,8 +3,8 @@ const path = require("path");
 
 const config = {
   app: {
-    testMode: true,
-    autoMode: true, // Same as json_scanner's autorun
+    testMode: false, // true = use test data paths, false = use production paths (set by Dashboard config)
+    autoMode: false, // Same as json_scanner's autorun (activated by Dashboard config)
     scanIntervalMs: 60000, // 60 seconds - same as json_scanner
     logLevel: "info",
     enableDetailedLogging: true,
@@ -20,9 +20,7 @@ const config = {
       "..",
       "BRK_CNC_CORE",
       "test-data",
-      "working_data",
-      "BRK CNC Management Dashboard",
-      "toolmanager"
+      "working_data"
     ), // Test mode temp base path
   },
   storage: {

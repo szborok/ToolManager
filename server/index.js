@@ -221,6 +221,75 @@ app.get("/api/analysis/upcoming", async (req, res) => {
   }
 });
 
+/**
+ * POST /api/config
+ * Receive configuration from Dashboard and activate backend
+ */
+app.post("/api/config", async (req, res) => {
+  try {
+    const { testMode, scanPaths, workingFolder } = req.body;
+
+    if (typeof testMode !== "boolean") {
+      return res.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "testMode (boolean) is required",
+        },
+      });
+    }
+
+    // Update configuration
+    config.app.testMode = testMode;
+    config.app.autoMode = true; // Activate scanning
+
+    if (workingFolder) {
+      config.app.userDefinedWorkingFolder = workingFolder;
+    }
+
+    if (scanPaths?.jsonFiles) {
+      config.paths.json = scanPaths.jsonFiles;
+    }
+    if (scanPaths?.excelFiles) {
+      config.paths.excel = scanPaths.excelFiles;
+    }
+
+    Logger.info("Configuration updated from Dashboard", {
+      testMode,
+      autoMode: true,
+      workingFolder,
+      scanPaths,
+    });
+
+    // Start Executor if not already running
+    if (!executor) {
+      Logger.info("Starting Executor after config update...");
+      executor = new Executor(dataManager);
+      executor.start().catch((error) => {
+        Logger.error("Executor error", { error: error.message });
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Configuration applied successfully",
+      config: {
+        testMode: config.app.testMode,
+        autoMode: config.app.autoMode,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    Logger.error("Failed to apply configuration", { error: error.message });
+    res.status(500).json({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Failed to apply configuration",
+        details: error.message,
+      },
+    });
+  }
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
