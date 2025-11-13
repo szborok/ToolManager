@@ -37,7 +37,7 @@
     "express": "^5.1.0",
     "mongodb": "^6.3.0",
     "uuid": "^9.0.1",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.4/xlsx-0.20.4.tgz"
+    "xlsx": "^0.18.5"
   },
   "engines": {
     "node": ">=14.0.0"

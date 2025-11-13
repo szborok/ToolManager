@@ -319,7 +319,7 @@ class Scanner {
   // ============ NEW WORKFLOW METHODS ============
 
   /**
-   * Step 1 & 2: Find and process ONE Excel file, save results using organized structure
+   * Step 1 & 2: Find and process ALL Excel files (matrix inventory), save consolidated results
    */
   async processExcelFile() {
     const excelScanPath = config.getExcelScanPath();
@@ -330,46 +330,69 @@ class Scanner {
       return null;
     }
 
-    // Process the first Excel file found
-    const excelFile = excelFiles[0];
-    Logger.info(`📊 Processing Excel file: ${excelFile.fileName}`);
+    Logger.info(`📊 Processing ${excelFiles.length} Excel file(s) for matrix inventory`);
 
     try {
-      // Copy Excel file to organized temp structure first
-      const tempExcelPath = await this.tempManager.copyToTemp(
-        excelFile.fullPath,
-        "excel_files"
-      );
-      Logger.info(`📁 Excel file copied to organized temp: ${tempExcelPath}`);
-
-      // Use ExcelProcessor to read actual Excel data from temp copy
       const ExcelProcessor = require("./ExcelProcessor");
+      const consolidatedInventory = new Map(); // Use Map to combine duplicate tool codes
+      const processedFiles = [];
 
-      const excelData = ExcelProcessor.processMainExcel(tempExcelPath);
+      // Process ALL Excel files
+      for (const excelFile of excelFiles) {
+        try {
+          Logger.info(`  � Processing: ${excelFile.fileName}`);
+          
+          // Copy Excel file to organized temp structure first
+          const tempExcelPath = await this.tempManager.copyToTemp(
+            excelFile.fullPath,
+            "excel_files"
+          );
 
-      // Convert toolInventory object to array format for Results.js
-      const toolInventoryArray = [];
-      if (excelData.toolInventory) {
-        for (const [toolCode, quantity] of Object.entries(
-          excelData.toolInventory
-        )) {
-          toolInventoryArray.push({
-            toolCode: toolCode,
-            description: "", // ExcelProcessor doesn't extract descriptions yet
-            quantity: quantity,
+          // Use ExcelProcessor to read actual Excel data from temp copy
+          const excelData = ExcelProcessor.processMainExcel(tempExcelPath);
+
+          // Accumulate tool inventory from this file
+          if (excelData.toolInventory) {
+            for (const [toolCode, quantity] of Object.entries(excelData.toolInventory)) {
+              if (consolidatedInventory.has(toolCode)) {
+                consolidatedInventory.set(toolCode, consolidatedInventory.get(toolCode) + quantity);
+              } else {
+                consolidatedInventory.set(toolCode, quantity);
+              }
+            }
+          }
+
+          processedFiles.push({
+            fileName: excelFile.fileName,
+            toolCount: Object.keys(excelData.toolInventory || {}).length
           });
+
+          Logger.info(`    ✓ ${Object.keys(excelData.toolInventory || {}).length} tools extracted`);
+        } catch (fileErr) {
+          Logger.error(`    ✗ Failed to process ${excelFile.fileName}: ${fileErr.message}`);
         }
       }
 
+      // Convert consolidated Map to array format
+      const toolInventoryArray = [];
+      for (const [toolCode, quantity] of consolidatedInventory.entries()) {
+        toolInventoryArray.push({
+          toolCode: toolCode,
+          description: "", // ExcelProcessor doesn't extract descriptions yet
+          quantity: quantity,
+        });
+      }
+
       const result = {
-        fileName: excelFile.fileName,
-        filePath: tempExcelPath, // Use temp path, not original
-        originalPath: excelFile.fullPath,
         processedAt: new Date().toISOString(),
+        filesProcessed: processedFiles,
+        totalFiles: excelFiles.length,
         toolInventory: toolInventoryArray,
+        totalUniqueTools: toolInventoryArray.length,
+        totalQuantity: Array.from(consolidatedInventory.values()).reduce((sum, qty) => sum + qty, 0)
       };
 
-      // Save Excel processing results to organized temp structure
+      // Save consolidated Excel processing results to organized temp structure
       await this.tempManager.saveToTemp(
         "excel_processing_result.json",
         JSON.stringify(result, null, 2),
@@ -377,18 +400,14 @@ class Scanner {
       );
 
       Logger.info(
-        `💾 Saved Excel results to organized temp: ${result.toolInventory.length} tools found`
+        `💾 Consolidated matrix inventory saved: ${result.totalUniqueTools} unique tools, ${result.totalQuantity} total quantity`
       );
       return result;
     } catch (err) {
-      Logger.error(
-        `Failed to process Excel file ${excelFile.fileName}: ${err.message}`
-      );
+      Logger.error(`Failed to process Excel files: ${err.message}`);
 
       // Return placeholder data on error
       const result = {
-        fileName: excelFile.fileName,
-        filePath: excelFile.fullPath,
         processedAt: new Date().toISOString(),
         toolInventory: [],
         error: err.message,
