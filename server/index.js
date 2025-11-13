@@ -10,9 +10,11 @@ const cors = require("cors");
 const config = require("../config");
 const Logger = require("../utils/Logger");
 const DataManager = require("../src/DataManager");
+const Executor = require("../src/Executor");
 
 const app = express();
 const PORT = 3002;
+let executor = null;
 
 // Middleware
 app.use(
@@ -251,6 +253,17 @@ async function startServer() {
       Logger.error(
         "Failed to initialize DataManager - server will start but data access will be limited"
       );
+    }
+
+    // Start Executor if in auto mode
+    if (config.app.autoMode) {
+      Logger.info("Starting Executor in AUTO mode...");
+      executor = new Executor(dataManager);
+      // Don't await - let it run in background
+      executor.start().catch((error) => {
+        Logger.error("Executor error", { error: error.message });
+      });
+      Logger.info("Executor started successfully");
     }
 
     app.listen(PORT, () => {

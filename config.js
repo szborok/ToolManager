@@ -3,7 +3,7 @@ const path = require("path");
 
 const config = {
   app: {
-    testMode: false,
+    testMode: true,
     autoMode: true, // Same as json_scanner's autorun
     scanIntervalMs: 60000, // 60 seconds - same as json_scanner
     logLevel: "info",
@@ -14,12 +14,14 @@ const config = {
     tempBaseName: "BRK CNC Management Dashboard", // Organized temp folder name
     userDefinedWorkingFolder: null, // User can override temp location
 
-    // Test mode temp path - points to centralized CNC_TestData
+    // Test mode temp path - points to centralized BRK_CNC_CORE test-data
     testProcessedDataPath: path.join(
       __dirname,
       "..",
-      "CNC_TestData",
+      "BRK_CNC_CORE",
+      "test-data",
       "working_data",
+      "BRK CNC Management Dashboard",
       "toolmanager"
     ), // Test mode temp base path
   },
@@ -63,14 +65,15 @@ const config = {
   },
   paths: {
     test: {
-      // Read-only test case folders (DO NOT MODIFY) - uses centralized CNC_TestData
-      testDataPath: path.join(__dirname, "..", "CNC_TestData", "source_data"),
+  // Read-only test case folders (DO NOT MODIFY) - uses centralized BRK_CNC_CORE test-data
+  testDataPath: path.join(__dirname, "..", "BRK_CNC_CORE", "test-data", "source_data"),
 
       // Sample Excel files for development - to identify monitored tools
       sampleExcelPath: path.join(
         __dirname,
         "..",
-        "CNC_TestData",
+        "BRK_CNC_CORE",
+        "test-data",
         "source_data",
         "matrix_excel_files"
       ),
@@ -81,7 +84,8 @@ const config = {
       jsonScanPath: path.join(
         __dirname,
         "..",
-        "CNC_TestData",
+        "BRK_CNC_CORE",
+        "test-data",
         "source_data",
         "json_files"
       ),
@@ -90,7 +94,8 @@ const config = {
       excelScanPath: path.join(
         __dirname,
         "..",
-        "CNC_TestData",
+        "BRK_CNC_CORE",
+        "test-data",
         "source_data",
         "matrix_excel_files"
       ),
@@ -99,7 +104,8 @@ const config = {
       scheduleFile: path.join(
         __dirname,
         "..",
-        "CNC_TestData",
+        "BRK_CNC_CORE",
+        "test-data",
         "source_data",
         "schedules",
         "production_schedule.json"
