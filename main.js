@@ -375,6 +375,10 @@ async function main() {
     }
 
     if (options.test) {
+      // Temporarily enable test mode for test runs
+      const originalTestMode = config.app.testMode;
+      config.app.testMode = true;
+
       if (options.testRuns === 1) {
         console.log("🧪 Running single test with data preservation...");
         await runTest();
@@ -384,6 +388,9 @@ async function main() {
         );
         await runMultipleTests(options.testRuns);
       }
+
+      // Restore original testMode
+      config.app.testMode = originalTestMode;
       process.exit(0);
     }
 

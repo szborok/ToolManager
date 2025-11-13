@@ -15,7 +15,8 @@
     "debug": "node main.js --debug",
     "test-storage": "node main.js --test-storage",
     "list-results": "node main.js --list-results",
-    "export-results": "node main.js --export-results"
+    "export-results": "node main.js --export-results",
+    "serve": "node server/index.js"
   },
   "keywords": [
     "cnc",
@@ -29,12 +30,14 @@
   "author": "BRK CNC Management Dashboard",
   "license": "MIT",
   "dependencies": {
-    "chokidar": "^3.6.0",
-    "uuid": "^9.0.1",
-    "xlsx": "^0.18.5",
     "chalk": "^4.1.2",
+    "chokidar": "^3.6.0",
+    "cors": "^2.8.5",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
     "mongodb": "^6.3.0",
-    "exceljs": "^4.4.0"
+    "uuid": "^9.0.1",
+    "xlsx": "^0.18.5"
   },
   "engines": {
     "node": ">=14.0.0"
