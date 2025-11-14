@@ -73,6 +73,7 @@ app.get("/api/tools", async (req, res) => {
     const isMatrix = req.query.isMatrix; // filter by isMatrix: true|false
 
     if (!dataManager) {
+      Logger.error("❌ API Request Failed: DataManager not initialized");
       return res.status(503).json({
         error: {
           code: "SERVICE_UNAVAILABLE",
@@ -87,14 +88,23 @@ app.get("/api/tools", async (req, res) => {
     if (isMatrix !== undefined) filter.isMatrix = isMatrix === "true";
 
     // Get real tools from DataManager
+    Logger.info("📡 Dashboard requested tools list");
     const tools = await dataManager.getAllTools(filter);
     const stats = await dataManager.getToolUsageStats();
+    Logger.info(`📊 Returning ${tools.length} tools to Dashboard`);
 
-    res.json({
+    const response = {
       tools,
       total: tools.length,
       stats,
-    });
+    };
+    
+    // Log first 2 tools as sample
+    if (tools.length > 0) {
+      Logger.info(`📦 Sample tool data: ${JSON.stringify(tools.slice(0, 2), null, 2)}`);
+    }
+
+    res.json(response);
   } catch (error) {
     Logger.error("Failed to get tools", { error: error.message });
     res.status(500).json({

@@ -1000,40 +1000,44 @@ class Results {
   async saveToStorage(reportData) {
     try {
       // If we have tempManager, save additional analysis files to organized structure
-      if (this.tempManager) {
-        // Save detailed tool analysis
-        const toolAnalysis = {
-          matrixTools: reportData.matrixTools || [],
-          nonMatrixTools: reportData.nonMatrixTools || [],
-          generatedAt: reportData.reportInfo.generatedAt,
-        };
+      if (this.tempManager && reportData) {
+        // Dashboard format doesn't have reportInfo, skip additional files
+        if (reportData.reportInfo) {
+          // Save detailed tool analysis
+          const toolAnalysis = {
+            matrixTools: reportData.matrixTools || [],
+            nonMatrixTools: reportData.nonMatrixTools || [],
+            generatedAt: reportData.reportInfo.generatedAt,
+          };
 
-        await this.tempManager.saveToTemp(
-          "tool_analysis_detailed.json",
-          JSON.stringify(toolAnalysis, null, 2),
-          "results"
-        );
+          await this.tempManager.saveToTemp(
+            "tool_analysis_detailed.json",
+            JSON.stringify(toolAnalysis, null, 2),
+            "results"
+          );
 
-        // Save summary report
-        const summary = {
-          summary: reportData.reportInfo.summary,
-          generatedAt: reportData.reportInfo.generatedAt,
-        };
+          // Save summary report
+          const summary = {
+            summary: reportData.reportInfo.summary,
+            generatedAt: reportData.reportInfo.generatedAt,
+          };
 
-        await this.tempManager.saveToTemp(
-          "analysis_summary.json",
-          JSON.stringify(summary, null, 2),
-          "results"
-        );
+          await this.tempManager.saveToTemp(
+            "analysis_summary.json",
+            JSON.stringify(summary, null, 2),
+            "results"
+          );
 
-        Logger.info(
-          "✅ Additional analysis files saved to organized temp structure"
-        );
+          Logger.info(
+            "✅ Additional analysis files saved to organized temp structure"
+          );
+        }
       }
 
       Logger.info("✅ Results saved successfully");
     } catch (error) {
       Logger.error(`Failed to save to organized storage: ${error.message}`);
+      Logger.error(`Stack trace: ${error.stack}`);
     }
   }
 

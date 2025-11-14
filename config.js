@@ -12,7 +12,13 @@ const config = {
     // Read-only processing settings (like JSONScanner)
     usePersistentTempFolder: true, // Use organized temp structure
     tempBaseName: "BRK CNC Management Dashboard", // Organized temp folder name
-    userDefinedWorkingFolder: null, // User can override temp location
+    userDefinedWorkingFolder: path.join(
+      __dirname,
+      "..",
+      "BRK_CNC_CORE",
+      "test-data",
+      "working_data"
+    ), // Default to test-data working folder
 
     // Test mode temp path - points to centralized BRK_CNC_CORE test-data
     testProcessedDataPath: path.join(
